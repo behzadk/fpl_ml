@@ -1,4 +1,3 @@
-from pyexpat import features
 from typing import Union, Callable
 
 import torch
