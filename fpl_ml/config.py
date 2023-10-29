@@ -1,25 +1,23 @@
-from hydra.core.config_store import ConfigStore
-
-from hydra_zen import MISSING, ZenField, builds, make_config, store
+import os
 from dataclasses import dataclass
 from typing import Any, Optional
-import os
 
-from fpl_ml.dataset import Dataset
+from hydra_zen import MISSING, ZenField, builds, make_config, store
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from torchmetrics import MeanSquaredError
+
 from fpl_ml.data_module import DataModuleLoadedFromCSV
-from fpl_ml.user import User
-
+from fpl_ml.dataset import Dataset
 from fpl_ml.preprocessing import (
-    SplitFeaturesAndLabels,
     DataframePipeline,
+    OneHotEncodeColumns,
     RandomSplitData,
+    SplitFeaturesAndLabels,
     StandardScaleColumns,
-    OneHotEncodeColumns
 )
+from fpl_ml.user import User
 from fpl_ml.visualisations import plot_regression_scatter
 
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from torchmetrics import MeanSquaredError
 
 @dataclass
 class BaseConfig:
@@ -45,7 +43,11 @@ def _initialize_datasets():
     dataset_store(Dataset, device="${user.device}", zen_partial=True, name="default")
 
 
-def _initialize_datamodules(train_val_data_path: Optional[os.PathLike] = None, test_data_path: Optional[os.PathLike] = None, predict_data_path: Optional[os.PathLike] = None):
+def _initialize_datamodules(
+    train_val_data_path: Optional[os.PathLike] = None,
+    test_data_path: Optional[os.PathLike] = None,
+    predict_data_path: Optional[os.PathLike] = None,
+):
     datamodule_store = store(group="datamodule")
     datamodule_store(
         DataModuleLoadedFromCSV,
@@ -81,34 +83,35 @@ def _initialize_metrics():
 def _initialize_preprocessing():
     preprocessing_store = store(group="preprocessing")
 
-    
-    numerical_features = ["X_rolling_mean_3_bonus",
-                          "X_rolling_mean_3_minutes",
-                            "X_rolling_mean_3_assists", 
-                          "X_rolling_mean_3_goals_conceded", 
-                          "X_rolling_mean_3_goals_scored",
-                          "X_game_week", "X_value"]
+    numerical_features = [
+        "X_rolling_mean_3_bonus",
+        "X_rolling_mean_3_minutes",
+        "X_rolling_mean_3_assists",
+        "X_rolling_mean_3_goals_conceded",
+        "X_rolling_mean_3_goals_scored",
+        "X_game_week",
+        "X_value",
+    ]
     categorical_features = ["X_team", "X_was_home", "X_opponent_team", "X_element_type"]
-
 
     steps = []
 
-    scale_step = builds(StandardScaleColumns, scale_columns=numerical_features, hydra_convert='all')
+    scale_step = builds(
+        StandardScaleColumns, scale_columns=numerical_features, hydra_convert="all"
+    )
 
-    encode_step = builds(OneHotEncodeColumns, columns_to_encode=categorical_features, hydra_convert='all')
+    encode_step = builds(
+        OneHotEncodeColumns, columns_to_encode=categorical_features, hydra_convert="all"
+    )
 
     split_step = builds(
         SplitFeaturesAndLabels,
-        x_column_prefixes=['X_'],
+        x_column_prefixes=["X_"],
         y_columns=["total_points"],
         hydra_convert="all",
     )
 
-    steps = [
-        scale_step,
-        encode_step,
-        split_step
-    ]
+    steps = [scale_step, encode_step, split_step]
 
     preprocessing_store(
         DataframePipeline, dataframe_processing_steps=steps, name="default"
@@ -132,12 +135,19 @@ def _initialize_visualisations():
     visualisations_store(regression_default, name="regression_default")
 
 
-
-
-def initialize_stores(mlruns_dir, train_val_data_path: Optional[os.PathLike] = None, test_data_path: Optional[os.PathLike] = None, predict_data_path: Optional[os.PathLike] = None):
+def initialize_stores(
+    mlruns_dir,
+    train_val_data_path: Optional[os.PathLike] = None,
+    test_data_path: Optional[os.PathLike] = None,
+    predict_data_path: Optional[os.PathLike] = None,
+):
     _initialize_users(mlruns_dir=mlruns_dir)
     _initialize_datasets()
-    _initialize_datamodules(train_val_data_path=train_val_data_path, test_data_path=test_data_path, predict_data_path=predict_data_path)
+    _initialize_datamodules(
+        train_val_data_path=train_val_data_path,
+        test_data_path=test_data_path,
+        predict_data_path=predict_data_path,
+    )
     _initialize_models()
     _initialize_preprocessing()
     _initialize_data_splitters()

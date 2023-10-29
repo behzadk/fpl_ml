@@ -1,7 +1,9 @@
-from typing import Optional, cast
-from lightning.pytorch import seed_everything
 import time
+from typing import Optional, cast
+
 import pandas as pd
+from lightning.pytorch import seed_everything
+
 
 def set_random_seeds(random_seed: Optional[int]) -> int:
     """Sets random seed using provided integer.

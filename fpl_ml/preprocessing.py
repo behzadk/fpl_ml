@@ -1,9 +1,11 @@
-from mlflow.pyfunc import PythonModel
 from abc import ABCMeta, abstractmethod
+
 import pandas as pd
 from loguru import logger as _LOGGER
+from mlflow.pyfunc import PythonModel
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
 from fpl_ml.utils import get_columns_with_prefix
 
 
@@ -84,16 +86,17 @@ class SplitFeaturesAndLabels(DataframeProcessingStep):
 
         return df
 
+
 class StandardScaleColumns(DataframeProcessingStep):
     def __init__(self, scale_columns):
         self._scale_columns = scale_columns
         self._scaler = StandardScaler()
-    
+
     def fit(self, df):
         X = df[self._scale_columns].values
 
         self._scaler.fit(X)
-    
+
     def transform(self, df) -> pd.DataFrame:
         X = df[self._scale_columns].values
         self._scaler.transform(X)
@@ -102,10 +105,11 @@ class StandardScaleColumns(DataframeProcessingStep):
             df[x] = X[:, idx]
 
         return df
-    
+
     def fit_transform(self, df) -> pd.DataFrame:
         self.fit(df)
         return self.transform(df)
+
 
 class OneHotEncodeColumns(DataframeProcessingStep):
     def __init__(self, columns_to_encode: list[str], drop_encoded_column: bool = True):
@@ -137,7 +141,6 @@ class OneHotEncodeColumns(DataframeProcessingStep):
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         self.fit(df)
         return self.transform(df)
-
 
 
 class RandomSplitData(DataSplitter):
