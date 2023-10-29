@@ -6,9 +6,6 @@ from typing import Any
 from fpl_ml.dataset import Dataset
 from fpl_ml.data_module import DataModuleLoadedFromCSV
 from fpl_ml.user import User
-from fpl_ml.torch_models import (
-    neural_network,
-)
 
 from fpl_ml.preprocessing import (
     SplitFeaturesAndLabels,
@@ -71,11 +68,6 @@ def _initialize_models():
     # Sklearn regressors
     for regressor in sklearn_regressors:
         model_store(regressor, name=regressor.__name__)
-
-    # Load our torch model architectures
-    torch_models = [neural_network]
-    for m in torch_models:
-        model_store(m, name=m.__name__)
 
 
 def _initialize_metrics():
