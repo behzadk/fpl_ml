@@ -84,11 +84,6 @@ def _initialize_preprocessing():
     preprocessing_store = store(group="preprocessing")
 
     numerical_features = [
-        "X_rolling_mean_3_bonus",
-        "X_rolling_mean_3_minutes",
-        "X_rolling_mean_3_assists",
-        "X_rolling_mean_3_goals_conceded",
-        "X_rolling_mean_3_goals_scored",
         "X_game_week",
         "X_value",
     ]
@@ -97,7 +92,8 @@ def _initialize_preprocessing():
     steps = []
 
     scale_step = builds(
-        StandardScaleColumns, scale_columns=numerical_features, hydra_convert="all"
+        StandardScaleColumns, scale_columns=numerical_features, 
+        scale_column_prefixes='X_rolling_', hydra_convert="all"
     )
 
     encode_step = builds(
