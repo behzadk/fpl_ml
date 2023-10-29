@@ -1,8 +1,10 @@
+from typing import Callable
+
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-import pandas as pd
-from typing import Callable
+
 from fpl_ml.preprocessing import DataframePipeline
 
 

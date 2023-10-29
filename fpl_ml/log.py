@@ -1,6 +1,7 @@
+from typing import Callable, Optional
+
 import mlflow
 import torch
-from typing import Optional, Callable
 from torchmetrics import Metric
 
 

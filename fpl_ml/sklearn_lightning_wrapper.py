@@ -1,14 +1,13 @@
-from typing import Union, Callable
-
-import torch
-
+from typing import Callable, Union
 
 import numpy as np
 import pytorch_lightning as pl
+import torch
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics.metric import Metric
 
 from fpl_ml.log import log_metrics_and_visualisations
+
 
 class SklearnModel:
     """Wrapper for sklearn models for standardised logging."""
@@ -18,8 +17,8 @@ class SklearnModel:
         model: Union[ClassifierMixin, RegressorMixin],
         metrics: dict[str, Metric],
         visualisations: dict[str, Callable],
-        features_key: str = 'X',
-        labels_key: str = 'y'
+        features_key: str = "X",
+        labels_key: str = "y",
     ):
         self.model = model
         self._metrics = metrics
@@ -47,7 +46,9 @@ class SklearnModel:
 
         # Fit model using whole train dataset
         train_batch = data_module.train_dataloader().dataset[:]
-        self.model.fit(X=train_batch[self._features_key], y=train_batch[self._labels_key])
+        self.model.fit(
+            X=train_batch[self._features_key], y=train_batch[self._labels_key]
+        )
 
         # Log metrics and figures for train data
         output_metrics = self._log(batch=train_batch, stage="train")

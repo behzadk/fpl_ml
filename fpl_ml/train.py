@@ -1,10 +1,12 @@
+from typing import Callable, Optional, Union
+
 import lightning.pytorch as pl
-from typing import Optional, Union, Callable
+import mlflow
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics import Metric
-import mlflow
-from fpl_ml.utils import set_random_seeds
+
 from fpl_ml.sklearn_lightning_wrapper import SklearnModel
+from fpl_ml.utils import set_random_seeds
 
 
 def train_sklearn(
@@ -22,10 +24,9 @@ def train_sklearn(
     # Initialise model
     model = SklearnModel(model, metrics, visualisations)
 
-
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         mlflow.sklearn.autolog()
-        
+
         # Seed everything and log the seed
         random_seed = set_random_seeds(random_seed)
         mlflow.log_param("seed", random_seed)
