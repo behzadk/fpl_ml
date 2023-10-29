@@ -12,7 +12,9 @@ from fpl_ml.config import collect_config_store, initialize_stores
 from fpl_ml.preprocessing import DataframePipeline
 from fpl_ml.train import train_sklearn
 from fpl_ml.user import User
-from fpl_ml.utils import set_random_seeds
+from fpl_ml.utils import set_random_seeds, delete_runs_by_metric
+
+from user_config import PROCESSED_DATA_DIR, MLRUNS_DIR
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
 
@@ -58,6 +60,8 @@ def run_train(
         random_seed=user.random_seed,
     )
 
+    delete_runs_by_metric(mlruns_dir=user.mlruns_dir, experiment_name='Test', keep_n_runs=10, metric='val_MSE', ascending=True)
+
     # Pseudorandom so mlflow picks a new name for the next run
     set_random_seeds(None)
 
@@ -79,6 +83,8 @@ def train_random_forest_grid_search():
 
     # Run gridsearch
     (jobs,) = launch(config["node"], task_function, overrides=overrides, multirun=True)
+
+    
 
 
 def train_gradient_boosting_regressor_grid_search():
@@ -108,12 +114,15 @@ def train_single_run():
     launch(config["node"], task_function, multirun=False)
 
 
+
 if __name__ == "__main__":
     # User defined directory to write our mlruns data
-    user_mlruns_dir = "/data/fpl_ml/mlruns"
+    user_mlruns_dir = MLRUNS_DIR
 
     # User defined path to our prepared data
-    train_val_data_path = "/data/fpl_ml/processed/all_data.csv"
+    train_val_data_path = os.path.join(PROCESSED_DATA_DIR, "train_val_data.csv")
+
+    test_data_path = os.path.join(PROCESSED_DATA_DIR, "test_data.csv")
 
     initialize_stores(
         mlruns_dir=user_mlruns_dir, train_val_data_path=train_val_data_path
