@@ -1,6 +1,8 @@
 # Fantasy Premier League Machine Learning
 Repository for preparation, analysis, model fitting and prediction for fantasy premier league data.
 
+Credit to https://github.com/vaastav/Fantasy-Premier-League for building a fantastic data resource.
+
 ### Project aims
 First stage of the project is to train models and perform model selection, predicting player scores for each game week of a premier league season. We are only using features that are available on https://fantasy.premierleague.com. We take a model agnostic approach to the models we use, this repo will support scikit-learn and pytorch models. 
 
