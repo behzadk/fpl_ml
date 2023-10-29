@@ -17,7 +17,7 @@ We aim to provide a platform for fast experimental iteration and model compariso
 4. Run `python run_train.py`. Currently runs a hyperparameter grid search for `RandomForestRegressor` and `GradientBoostedRegressor`.
 5. Above your mlruns directory run `mlflow ui`. This will launch a local server for visualising the experiments that have been run.
 
-### Example output
+## Example output
 
 Example below shows performance on validation set for predicting player scores for the `2019-2020` season. Each datapoint is the number of points a player got in a given game week. The purple line is the identity (`x == y`). Datapoints can come from any season. Future efforts will hold out a season for the validation set and a season for the test set. 
 ![image](https://github.com/behzadk/fpl_ml/assets/15074455/56fddcb2-5b92-499f-80a8-25e6e7190d03)
