@@ -1,6 +1,9 @@
+DATA_DIR = '/path/to/data_dir/'
 
 # Directory where we want to write prepared data
-OUTPUT_DIR = '../data/fpl_ml/'
+PROCESSED_DATA_DIR = f'{DATA_DIR}/processed/'
+
+MLRUNS_DIR = f"{DATA_DIR}/mlruns/"
 
 # Directory where https://github.com/vaastav/Fantasy-Premier-League is cloned to
-VAASTAV_FPL_DIR = '../Fantasy-Premier-League/'
+VAASTAV_FPL_DIR = 'path/to/Fantasy-Premier-League/'
