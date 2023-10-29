@@ -1,7 +1,6 @@
-name: base
+name: fpl_ml
 channels:
   - conda-forge
-  - bioconda
   - pytorch
 platforms:
   - linux-64
