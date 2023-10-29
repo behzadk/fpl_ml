@@ -16,7 +16,7 @@ We aim to provide a platform for fast experimental iteration and model compariso
 - Logging with mlflow
 - Hydra-zen configs
 
-TODO:
+### TODO:
   - Script for downloading raw data
   - Unittesting
   - Pytorch support
