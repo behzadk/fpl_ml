@@ -3,6 +3,8 @@ from typing import Optional, cast
 
 import pandas as pd
 from lightning.pytorch import seed_everything
+import mlflow
+import shutil
 
 
 def set_random_seeds(random_seed: Optional[int]) -> int:
@@ -47,3 +49,49 @@ def add_prefix_to_columns(df, columns, prefix):
     df = df.rename(columns=new_names)
 
     return df
+
+
+
+def get_experiment_runs(
+    experiment_name: str,
+    tracking_uri: str,
+) -> pd.DataFrame:
+    """Gets all runs of an experiment.
+    Args:
+        experiment_name (str): Name of MLflow experiment.
+        tracking_uri (str): The URI for the MLflow tracking server.
+    Returns:
+        Dataframe of MLflow runs.
+    """
+
+    mlflow.set_tracking_uri(tracking_uri)
+
+    current_experiment = mlflow.get_experiment_by_name(experiment_name)
+
+    runs_df = mlflow.search_runs([current_experiment.experiment_id])
+
+    return runs_df
+
+def delete_runs_by_metric(mlruns_dir, experiment_name, keep_n_runs=25, metric='val_MSE', ascending=True):
+    """Permanently deletes runs after sorting by a given metric. 
+
+    e.g `keep_n_runs=25, metric='val_MSE', ascending=True` will keep the runs with the lowest `val_MSE` scores
+
+    Args:
+        mlruns_dir: MLflow runs dir.
+        experiment_name: Experiment name.
+        keep_n_runs: Number of runs to keep after sorting. Defaults to 25.
+    """
+    
+    def remove_run_dir(run_dir):
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+    runs_df = get_experiment_runs(tracking_uri=f"file://{mlruns_dir}", experiment_name=experiment_name)
+    runs_df = runs_df.sort_values(by=f'metrics.{metric}', ascending=True)
+    
+    if keep_n_runs < runs_df.shape[0]:
+        drop_runs = runs_df.tail(runs_df.shape[0] - keep_n_runs)
+
+        for r in drop_runs.run_id:
+            mlflow.delete_run(run_id=r)
+            remove_run_dir(f"{mlruns_dir}/{r}/")
