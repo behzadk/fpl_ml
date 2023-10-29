@@ -88,11 +88,26 @@ class SplitFeaturesAndLabels(DataframeProcessingStep):
 
 
 class StandardScaleColumns(DataframeProcessingStep):
-    def __init__(self, scale_columns):
+    def __init__(self, scale_columns, scale_column_prefixes):
         self._scale_columns = scale_columns
+        self._scale_column_prefixes = scale_column_prefixes
         self._scaler = StandardScaler()
 
     def fit(self, df):
+
+        if self._scale_columns:
+            scale_columns = self._scale_columns[:]
+
+        else:
+            scale_columns = []
+
+        if self._scale_column_prefixes:
+            scale_columns.extend(
+                get_columns_with_prefix(df, self._scale_column_prefixes)
+            )
+
+        self._scale_columns = list(set(scale_columns))
+
         X = df[self._scale_columns].values
 
         self._scaler.fit(X)

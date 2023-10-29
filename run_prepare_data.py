@@ -5,7 +5,7 @@ from glob import glob
 import pandas as pd
 from loguru import logger
 
-from fpl_ml.utils import add_prefix_to_columns
+from fpl_ml.utils import add_prefix_to_columns, get_columns_with_prefix
 
 _X = [
     "value",
@@ -126,21 +126,13 @@ def _generate_player_summary_statistics(master_df: pd.DataFrame):
 
         player_df = player_df.sort_values(by=["starting_year", "game_week"])
 
-        player_df = generate_moving_average(
-            player_df, column="minutes", window_size=3, fill_value=-1
-        )
-        player_df = generate_moving_average(
-            player_df, column="assists", window_size=3, fill_value=-1
-        )
-        player_df = generate_moving_average(
-            player_df, column="goals_conceded", window_size=3, fill_value=-1
-        )
-        player_df = generate_moving_average(
-            player_df, column="goals_scored", window_size=3, fill_value=-1
-        )
-        player_df = generate_moving_average(
-            player_df, column="bonus", window_size=3, fill_value=-1
-        )
+        window_sizes = [2, 4, 6, 8]
+        stat_columns = ["minutes", "assists", "goals_conceded", "goals_scored", "bonus"]
+        for w in window_sizes:
+            for s in stat_columns:
+                player_df = generate_moving_average(
+                    player_df, column=s, window_size=w, fill_value=-1
+                )
 
         player_dfs.append(player_df)
 
@@ -284,11 +276,24 @@ def main():
         lambda row: get_season_start_year(row["season"]), axis=1
     )
 
+    X = [
+        "value",
+        "element_type",
+        "opponent_team",
+        "game_week",
+        "team",
+        "was_home",
+    ]
+
+    rolling_mean_columns = get_columns_with_prefix(master_df, prefix_list='rolling_mean_')
+
+    X.extend(rolling_mean_columns)
+    
     master_df = _generate_player_summary_statistics(master_df)
 
-    data_df = master_df[[*_X, *_Y]]
+    data_df = master_df[[*X, *_Y]]
 
-    data_df = add_prefix_to_columns(data_df, columns=_X, prefix="X_")
+    data_df = add_prefix_to_columns(data_df, columns=X, prefix="X_")
 
     data_df.to_csv(f"{output_data_dir}/all_data.csv", index=False)
 
