@@ -6,7 +6,7 @@ import pandas as pd
 from loguru import logger
 
 from fpl_ml.utils import add_prefix_to_columns, get_columns_with_prefix
-from user_config import OUTPUT_DIR, VAASTAV_FPL_DIR
+from user_config import PROCESSED_DATA_DIR, VAASTAV_FPL_DIR
 
 
 def _get_gw_paths(season_dir: os.PathLike) -> pd.DataFrame:
@@ -207,7 +207,7 @@ def get_season_start_year(year_string):
 
 
 def main():
-    output_data_dir = os.path.join(OUTPUT_DIR, 'processed')
+    output_data_dir = PROCESSED_DATA_DIR
     raw_data_dir = os.path.join(VAASTAV_FPL_DIR, 'data')
 
     os.makedirs(output_data_dir, exist_ok=True)
@@ -263,18 +263,18 @@ def main():
         "element_type",
         "opponent_team",
         "game_week",
-        "team",
+        "team_name",
         "was_home",
     ]
     y = ["total_points"]
 
-    rolling_mean_columns = get_columns_with_prefix(master_df, prefix_list='rolling_mean_')
+    rolling_mean_columns = get_columns_with_prefix(master_df, prefix_list=['rolling_mean_'])
     X.extend(rolling_mean_columns)
-    
+
     master_df = _generate_player_summary_statistics(master_df)
 
     # Holdout year for test set
-    test_year = '2022'
+    test_year = 2022
     test_df = master_df.loc[master_df['starting_year'] == test_year][[*X, *y]]
 
     train_df = master_df.loc[master_df['starting_year'] != test_year][[*X, *y]]

@@ -87,13 +87,13 @@ def _initialize_preprocessing():
         "X_game_week",
         "X_value",
     ]
-    categorical_features = ["X_team", "X_was_home", "X_opponent_team", "X_element_type"]
+    categorical_features = ["X_team_name", "X_was_home", "X_opponent_team", "X_element_type"]
 
     steps = []
 
     scale_step = builds(
         StandardScaleColumns, scale_columns=numerical_features, 
-        scale_column_prefixes='X_rolling_', hydra_convert="all"
+        scale_column_prefixes=['X_rolling_'], hydra_convert="all"
     )
 
     encode_step = builds(
