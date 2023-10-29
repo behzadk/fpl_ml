@@ -2,7 +2,9 @@ from hydra.core.config_store import ConfigStore
 
 from hydra_zen import MISSING, ZenField, builds, make_config, store
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
+import os
+
 from fpl_ml.dataset import Dataset
 from fpl_ml.data_module import DataModuleLoadedFromCSV
 from fpl_ml.user import User
@@ -19,10 +21,6 @@ from fpl_ml.visualisations import plot_regression_scatter
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from torchmetrics import MeanSquaredError
 
-TRAIN_FPL_ML_PATH = "/data/fpl_ml/all_data.csv"
-MLRUNS_DIR = '/data/fpl_ml/mlruns'
-
-
 @dataclass
 class BaseConfig:
     # Must be passed at command line -- neccesary arguments
@@ -36,10 +34,10 @@ class BaseConfig:
     visualisations: Any = MISSING
 
 
-def _initialize_users():
+def _initialize_users(mlruns_dir: os.PathLike):
     user_store = store(group="user")
-    user_store(User, mlruns_dir=MLRUNS_DIR, device="cpu", name="default")
-    user_store(User, mlruns_dir=MLRUNS_DIR, device="gpu", name="gpu")
+    user_store(User, mlruns_dir=mlruns_dir, device="cpu", name="default")
+    user_store(User, mlruns_dir=mlruns_dir, device="gpu", name="gpu")
 
 
 def _initialize_datasets():
@@ -47,11 +45,13 @@ def _initialize_datasets():
     dataset_store(Dataset, device="${user.device}", zen_partial=True, name="default")
 
 
-def _initialize_datamodules():
+def _initialize_datamodules(train_val_data_path: Optional[os.PathLike] = None, test_data_path: Optional[os.PathLike] = None, predict_data_path: Optional[os.PathLike] = None):
     datamodule_store = store(group="datamodule")
     datamodule_store(
         DataModuleLoadedFromCSV,
-        train_validation_data_path=TRAIN_FPL_ML_PATH,
+        train_validation_data_path=train_val_data_path,
+        test_data_path=test_data_path,
+        predict_data_path=predict_data_path,
         partial_dataset="${dataset}",
         preprocessing_pipeline="${preprocessing}",
         train_validation_splitter="${data_splitter}",
@@ -134,10 +134,10 @@ def _initialize_visualisations():
 
 
 
-def initialize_stores():
-    _initialize_users()
+def initialize_stores(mlruns_dir, train_val_data_path: Optional[os.PathLike] = None, test_data_path: Optional[os.PathLike] = None, predict_data_path: Optional[os.PathLike] = None):
+    _initialize_users(mlruns_dir=mlruns_dir)
     _initialize_datasets()
-    _initialize_datamodules()
+    _initialize_datamodules(train_val_data_path=train_val_data_path, test_data_path=test_data_path, predict_data_path=predict_data_path)
     _initialize_models()
     _initialize_preprocessing()
     _initialize_data_splitters()
