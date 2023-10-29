@@ -30,7 +30,6 @@ Example below shows performance on validation set for predicting player scores f
 - Hydra-zen configs
 
 ### TODO:
-  - Script for downloading raw data
   - Unittesting
   - Pytorch support
   - Heueristic simulations for building teams
