@@ -1,6 +1,5 @@
 from hydra.core.config_store import ConfigStore
 
-# from fpl_ml.zen_test import DNN, CNN
 from hydra_zen import MISSING, ZenField, builds, make_config, store
 from dataclasses import dataclass
 from typing import Any
