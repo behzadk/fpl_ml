@@ -134,7 +134,7 @@ class OneHotEncodeColumns(DataframeProcessingStep):
     def fit(self, df: pd.DataFrame):
         encoders = []
         for col_name in self.columns_to_encode:
-            encoder = OneHotEncoder(sparse=False)
+            encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
             encoder.fit(df[[col_name]])
             encoders.append(encoder)
 
