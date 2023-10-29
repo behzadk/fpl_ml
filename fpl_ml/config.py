@@ -172,3 +172,5 @@ def collect_config_store():
     )
 
     store(config, group="fpl_ml", name="default_config")
+
+    return store
