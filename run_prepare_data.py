@@ -6,21 +6,7 @@ import pandas as pd
 from loguru import logger
 
 from fpl_ml.utils import add_prefix_to_columns, get_columns_with_prefix
-
-_X = [
-    "value",
-    "element_type",
-    "opponent_team",
-    "game_week",
-    "rolling_mean_3_bonus",
-    "rolling_mean_3_minutes",
-    "rolling_mean_3_assists",
-    "rolling_mean_3_goals_conceded",
-    "rolling_mean_3_goals_scored",
-    "team",
-    "was_home",
-]
-_Y = ["total_points"]
+from user_config import OUTPUT_DIR, VAASTAV_FPL_DIR
 
 
 def _get_gw_paths(season_dir: os.PathLike) -> pd.DataFrame:
@@ -221,21 +207,17 @@ def get_season_start_year(year_string):
 
 
 def main():
-    output_data_dir = "/mnt/c/Users/behza/Documents/code/data/fpl_ml"
-    data_dir = "./Fantasy-Premier-League/data"
-    master_team_df = pd.read_csv(f"{data_dir}/master_team_list.csv")
+    output_data_dir = os.path.join(OUTPUT_DIR, 'processed')
+    raw_data_dir = os.path.join(VAASTAV_FPL_DIR, 'data')
+
+    os.makedirs(output_data_dir, exist_ok=True)
+
+    master_team_df = pd.read_csv(os.path.join(raw_data_dir, "master_team_list.csv"))
+        
     master_team_df = master_team_df.rename(columns={"id": "team_id"})
 
-    # df = pd.read_csv(f"{data_dir}/cleaned_merged_seasons.csv")
-
     # Use list comprehension to generate a list of DataFrames
-    game_week_paths_df = _generate_gw_paths_df(data_dir)
-
-    # Temp select one season
-    # game_week_paths_df = game_week_paths_df.loc[game_week_paths_df['game_week'] > 20]
-    game_week_paths_df = game_week_paths_df.loc[
-        game_week_paths_df["season"] == "2019-20"
-    ]
+    game_week_paths_df = _generate_gw_paths_df(raw_data_dir)
 
     gw_dataframes = []
 
@@ -250,8 +232,8 @@ def main():
         if gw_df is None:
             continue
 
-        player_raw_df = pd.read_csv(f"{data_dir}/{season}/players_raw.csv")
-        player_id_df = pd.read_csv(f"{data_dir}/{season}/player_idlist.csv")
+        player_raw_df = pd.read_csv(f"{raw_data_dir}/{season}/players_raw.csv")
+        player_id_df = pd.read_csv(f"{raw_data_dir}/{season}/player_idlist.csv")
         player_id_df = player_id_df.rename(columns={"id": "player_id"})
 
         logger.info(f"Preparing gw: {row['game_week']}, season: {season}")
@@ -284,21 +266,27 @@ def main():
         "team",
         "was_home",
     ]
+    y = ["total_points"]
 
     rolling_mean_columns = get_columns_with_prefix(master_df, prefix_list='rolling_mean_')
-
     X.extend(rolling_mean_columns)
     
     master_df = _generate_player_summary_statistics(master_df)
 
-    data_df = master_df[[*X, *_Y]]
+    # Holdout year for test set
+    test_year = '2022'
+    test_df = master_df.loc[master_df['starting_year'] == test_year][[*X, *y]]
 
-    data_df = add_prefix_to_columns(data_df, columns=X, prefix="X_")
+    train_df = master_df.loc[master_df['starting_year'] != test_year][[*X, *y]]
 
-    data_df.to_csv(f"{output_data_dir}/all_data.csv", index=False)
+    test_df = add_prefix_to_columns(test_df, columns=X, prefix="X_")
+    train_df = add_prefix_to_columns(train_df, columns=X, prefix="X_")
 
-    master_df.to_csv(f"{output_data_dir}/master.csv", index=False)
 
+    train_df.to_csv(os.path.join(output_data_dir, 'train_val_data.csv'), index=False)
+    test_df.to_csv(os.path.join(output_data_dir, 'test_data.csv'), index=False)
+
+    master_df.to_csv(os.path.join(output_data_dir, 'master.csv'), index=False)
 
 if __name__ == "__main__":
     main()
