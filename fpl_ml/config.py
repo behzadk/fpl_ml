@@ -23,8 +23,8 @@ from fpl_ml.visualisations import plot_regression_scatter
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from torchmetrics import MeanSquaredError
 
-TRAIN_FPL_ML_PATH = "/mnt/c/Users/behza/Documents/code/data/fpl_ml/all_data.csv"
-MLRUNS_DIR = '/mnt/c/Users/behza/Documents/code/fpl_ml/mlruns'
+TRAIN_FPL_ML_PATH = "/data/fpl_ml/all_data.csv"
+MLRUNS_DIR = '/data/fpl_ml/mlruns'
 
 
 @dataclass
