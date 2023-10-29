@@ -146,8 +146,6 @@ def initialize_stores():
 
 
 def collect_config_store():
-    config_store = ConfigStore.instance()
-
     zen_config = []
 
     for value in BaseConfig.__dataclass_fields__.values():
@@ -174,7 +172,3 @@ def collect_config_store():
     )
 
     store(config, group="fpl_ml", name="default_config")
-
-    config_store.store(group="fpl_ml", name="test_config", node=config)
-
-    return config_store
