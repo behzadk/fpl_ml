@@ -29,6 +29,10 @@ class StoreGroups(Enum):
     METRICS = "metrics"
     VISUALISATIONS = "visualisations"
 
+class HydraGroups(Enum):
+    HYDRA_SWEEPER = "hydra/sweeper"
+    HYDRA_SWEEPER_SAMPLER = "hydra/sweeper/sampler"
+
 
 def _initialize_users(mlruns_dir: os.PathLike):
     user_store = hz.store(group=StoreGroups.USER.value)
@@ -81,30 +85,6 @@ def _initialize_metrics():
 def _initialize_preprocessing():
     preprocessing_store = hz.store(group=StoreGroups.PREPROCESSING.value)
 
-    numerical_features = [
-        "X_game_week",
-        "X_value",
-    ]
-    categorical_features = [
-        "X_team_name",
-        "X_was_home",
-        "X_opponent_team",
-        "X_element_type",
-    ]
-
-    steps = []
-
-    scale_step = hz.builds(
-        StandardScaleColumns,
-        scale_columns=numerical_features,
-        scale_column_prefixes=["X_rolling_"],
-        hydra_convert="all",
-    )
-
-    encode_step = hz.builds(
-        OneHotEncodeColumns, columns_to_encode=categorical_features, hydra_convert="all"
-    )
-
     split_step = hz.builds(
         SplitFeaturesAndLabels,
         x_column_prefixes=["X_"],
@@ -112,7 +92,7 @@ def _initialize_preprocessing():
         hydra_convert="all",
     )
 
-    steps = [scale_step, encode_step, split_step]
+    steps = [split_step]
 
     preprocessing_store(
         DataframePipeline, dataframe_processing_steps=steps, name="default"
@@ -154,3 +134,6 @@ def initialize_stores(
     _initialize_data_splitters()
     _initialize_metrics()
     _initialize_visualisations()
+
+    hz.store.add_to_hydra_store(overwrite_ok=False)
+
