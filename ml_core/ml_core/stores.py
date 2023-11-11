@@ -6,17 +6,15 @@ import hydra_zen as hz
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from torchmetrics import MeanSquaredError
 
-from fpl_ml.data_module import DataModuleLoadedFromCSV
-from fpl_ml.dataset import Dataset
-from fpl_ml.preprocessing import (
+from ml_core.data_module import DataModuleLoadedFromCSV
+from ml_core.dataset import Dataset
+from ml_core.preprocessing import (
     DataframePipeline,
-    OneHotEncodeColumns,
     RandomSplitData,
     SplitFeaturesAndLabels,
-    StandardScaleColumns,
 )
-from fpl_ml.user import User
-from fpl_ml.visualisations import plot_regression_scatter
+from ml_core.user import User
+from ml_core.visualisations import plot_regression_scatter
 
 
 class StoreGroups(Enum):
@@ -28,6 +26,11 @@ class StoreGroups(Enum):
     DATA_SPLITTER = "data_splitter"
     METRICS = "metrics"
     VISUALISATIONS = "visualisations"
+
+
+class HydraGroups(Enum):
+    HYDRA_SWEEPER = "hydra/sweeper"
+    HYDRA_SWEEPER_SAMPLER = "hydra/sweeper/sampler"
 
 
 def _initialize_users(mlruns_dir: os.PathLike):
@@ -81,30 +84,6 @@ def _initialize_metrics():
 def _initialize_preprocessing():
     preprocessing_store = hz.store(group=StoreGroups.PREPROCESSING.value)
 
-    numerical_features = [
-        "X_game_week",
-        "X_value",
-    ]
-    categorical_features = [
-        "X_team_name",
-        "X_was_home",
-        "X_opponent_team",
-        "X_element_type",
-    ]
-
-    steps = []
-
-    scale_step = hz.builds(
-        StandardScaleColumns,
-        scale_columns=numerical_features,
-        scale_column_prefixes=["X_rolling_"],
-        hydra_convert="all",
-    )
-
-    encode_step = hz.builds(
-        OneHotEncodeColumns, columns_to_encode=categorical_features, hydra_convert="all"
-    )
-
     split_step = hz.builds(
         SplitFeaturesAndLabels,
         x_column_prefixes=["X_"],
@@ -112,7 +91,7 @@ def _initialize_preprocessing():
         hydra_convert="all",
     )
 
-    steps = [scale_step, encode_step, split_step]
+    steps = [split_step]
 
     preprocessing_store(
         DataframePipeline, dataframe_processing_steps=steps, name="default"
@@ -154,3 +133,5 @@ def initialize_stores(
     _initialize_data_splitters()
     _initialize_metrics()
     _initialize_visualisations()
+
+    hz.store.add_to_hydra_store(overwrite_ok=False)

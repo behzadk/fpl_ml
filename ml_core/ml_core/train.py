@@ -5,8 +5,8 @@ import mlflow
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics import Metric
 
-from fpl_ml.sklearn_lightning_wrapper import SklearnModel
-from fpl_ml.utils import set_random_seeds
+from ml_core.sklearn_lightning_wrapper import SklearnModel
+from ml_core.utils import set_random_seeds
 
 
 def train_sklearn(

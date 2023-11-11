@@ -6,7 +6,7 @@ import torch
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics.metric import Metric
 
-from fpl_ml.log import log_metrics_and_visualisations
+from ml_core.log import log_metrics_and_visualisations
 
 
 class SklearnModel:
@@ -56,7 +56,6 @@ class SklearnModel:
         # Log metrics and figures for validation data
         val_batch = data_module.val_dataloader().dataset[:]
         output_metrics = self._log(batch=val_batch, stage="val")
-
 
         # Log metrics and figures for test data
         data_module.setup("test")

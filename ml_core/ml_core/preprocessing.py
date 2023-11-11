@@ -6,7 +6,7 @@ from mlflow.pyfunc import PythonModel
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from fpl_ml.utils import get_columns_with_prefix
+from ml_core.utils import get_columns_with_prefix
 
 
 class DataSplitter(metaclass=ABCMeta):
@@ -94,7 +94,6 @@ class StandardScaleColumns(DataframeProcessingStep):
         self._scaler = StandardScaler()
 
     def fit(self, df):
-
         if self._scale_columns:
             scale_columns = self._scale_columns[:]
 
@@ -134,7 +133,7 @@ class OneHotEncodeColumns(DataframeProcessingStep):
     def fit(self, df: pd.DataFrame):
         encoders = []
         for col_name in self.columns_to_encode:
-            encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+            encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
             encoder.fit(df[[col_name]])
             encoders.append(encoder)
 

@@ -51,7 +51,6 @@ def add_prefix_to_columns(df, columns, prefix):
     return df
 
 
-
 def get_experiment_runs(
     experiment_name: str,
     tracking_uri: str,
@@ -72,8 +71,11 @@ def get_experiment_runs(
 
     return runs_df
 
-def delete_runs_by_metric(mlruns_dir, experiment_name, keep_n_runs=25, metric='val_MSE', ascending=True):
-    """Permanently deletes runs after sorting by a given metric. 
+
+def delete_runs_by_metric(
+    mlruns_dir, experiment_name, keep_n_runs=25, metric="val_MSE", ascending=True
+):
+    """Permanently deletes runs after sorting by a given metric.
 
     e.g `keep_n_runs=25, metric='val_MSE', ascending=True` will keep the runs with the lowest `val_MSE` scores
 
@@ -82,13 +84,15 @@ def delete_runs_by_metric(mlruns_dir, experiment_name, keep_n_runs=25, metric='v
         experiment_name: Experiment name.
         keep_n_runs: Number of runs to keep after sorting. Defaults to 25.
     """
-    
+
     def remove_run_dir(run_dir):
         shutil.rmtree(run_dir, ignore_errors=True)
 
-    runs_df = get_experiment_runs(tracking_uri=f"file://{mlruns_dir}", experiment_name=experiment_name)
-    runs_df = runs_df.sort_values(by=f'metrics.{metric}', ascending=True)
-    
+    runs_df = get_experiment_runs(
+        tracking_uri=f"file://{mlruns_dir}", experiment_name=experiment_name
+    )
+    runs_df = runs_df.sort_values(by=f"metrics.{metric}", ascending=True)
+
     if keep_n_runs < runs_df.shape[0]:
         drop_runs = runs_df.tail(runs_df.shape[0] - keep_n_runs)
 
