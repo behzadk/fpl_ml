@@ -6,7 +6,7 @@ import torch
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics.metric import Metric
 
-from fpl_ml.log import log_metrics_and_visualisations
+from ml_core.log import log_metrics_and_visualisations
 
 
 class SklearnModel:

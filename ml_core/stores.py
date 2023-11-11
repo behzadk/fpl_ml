@@ -6,17 +6,15 @@ import hydra_zen as hz
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from torchmetrics import MeanSquaredError
 
-from fpl_ml.data_module import DataModuleLoadedFromCSV
-from fpl_ml.dataset import Dataset
-from fpl_ml.preprocessing import (
+from ml_core.data_module import DataModuleLoadedFromCSV
+from ml_core.dataset import Dataset
+from ml_core.preprocessing import (
     DataframePipeline,
-    OneHotEncodeColumns,
     RandomSplitData,
     SplitFeaturesAndLabels,
-    StandardScaleColumns,
 )
-from fpl_ml.user import User
-from fpl_ml.visualisations import plot_regression_scatter
+from ml_core.user import User
+from ml_core.visualisations import plot_regression_scatter
 
 
 class StoreGroups(Enum):

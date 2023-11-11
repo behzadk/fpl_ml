@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
 
-from fpl_ml.preprocessing import DataframePipeline
+from ml_core.preprocessing import DataframePipeline
 
 
 class DataModuleLoadedFromCSV(pl.LightningDataModule):

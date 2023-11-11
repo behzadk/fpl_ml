@@ -6,7 +6,7 @@ from mlflow.pyfunc import PythonModel
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from fpl_ml.utils import get_columns_with_prefix
+from ml_core.utils import get_columns_with_prefix
 
 
 class DataSplitter(metaclass=ABCMeta):
