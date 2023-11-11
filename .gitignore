@@ -36,16 +36,12 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-<<<<<<< HEAD
 user_config.py
 
 # Mlflow and hydra outputs
 mlruns
 multirun
 outputs
-=======
-./user_config.py
->>>>>>> dfdb268f707df122be0789be2583fa89a6e9091f
 
 # Unit test / coverage reports
 htmlcov/
