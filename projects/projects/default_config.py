@@ -43,5 +43,5 @@ def collect_config_store():
         ]
     )
 
-    hz.store(config, group="fpl_ml", name="default_config")
+    hz.store(config, group="default", name="default_config")
     hz.store.add_to_hydra_store(overwrite_ok=False)
