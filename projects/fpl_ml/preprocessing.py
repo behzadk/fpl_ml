@@ -1,6 +1,6 @@
 import hydra_zen as hz
-from fpl_ml.stores import StoreGroups
-from fpl_ml.preprocessing import StandardScaleColumns, OneHotEncodeColumns, SplitFeaturesAndLabels, DataframePipeline
+from ml_core.stores import StoreGroups
+from ml_core.preprocessing import StandardScaleColumns, OneHotEncodeColumns, SplitFeaturesAndLabels, DataframePipeline
 from projects.fpl_ml import constants
 
 class PreprocessingStores:

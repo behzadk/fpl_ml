@@ -9,12 +9,12 @@ import hydra_zen as hz
 from hydra_zen import launch, zen
 from sklearn.base import RegressorMixin
 
-from fpl_ml.config import collect_config_store
-from fpl_ml.stores import StoreGroups, HydraGroups, initialize_stores
-from fpl_ml.preprocessing import DataframePipeline
-from fpl_ml.train import train_sklearn
-from fpl_ml.user import User
-from fpl_ml.utils import set_random_seeds, delete_runs_by_metric
+from ml_core.config import collect_config_store
+from ml_core.stores import StoreGroups, HydraGroups, initialize_stores
+from ml_core.preprocessing import DataframePipeline
+from ml_core.train import train_sklearn
+from ml_core.user import User
+from ml_core.utils import set_random_seeds, delete_runs_by_metric
 from projects import fpl_ml
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
