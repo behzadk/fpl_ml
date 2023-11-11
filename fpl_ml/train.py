@@ -25,7 +25,7 @@ def train_sklearn(
     model = SklearnModel(model, metrics, visualisations)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
-        mlflow.sklearn.autolog()
+        mlflow.sklearn.autolog(log_datasets=False)
 
         # Seed everything and log the seed
         random_seed = set_random_seeds(random_seed)
