@@ -94,7 +94,6 @@ class StandardScaleColumns(DataframeProcessingStep):
         self._scaler = StandardScaler()
 
     def fit(self, df):
-
         if self._scale_columns:
             scale_columns = self._scale_columns[:]
 
@@ -134,7 +133,7 @@ class OneHotEncodeColumns(DataframeProcessingStep):
     def fit(self, df: pd.DataFrame):
         encoders = []
         for col_name in self.columns_to_encode:
-            encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+            encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
             encoder.fit(df[[col_name]])
             encoders.append(encoder)
 

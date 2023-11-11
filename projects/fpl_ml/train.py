@@ -61,26 +61,32 @@ def run_train(
         random_seed=user.random_seed,
     )
 
-    delete_runs_by_metric(mlruns_dir=user.mlruns_dir, experiment_name='Test', keep_n_runs=10, metric='val_MSE', ascending=True)
+    delete_runs_by_metric(
+        mlruns_dir=user.mlruns_dir,
+        experiment_name="Test",
+        keep_n_runs=10,
+        metric="val_MSE",
+        ascending=True,
+    )
 
     # Pseudorandom so mlflow picks a new name for the next run
     set_random_seeds(None)
 
 
 def train_gradient_boosting_regressor_tpe():
-
-
     config = hz.store.get_entry("fpl_ml", "default_config")
     task_function = zen(run_train)
 
     # Use the project default preprocessing pipeline
-    overrides = {StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default}
+    overrides = {
+        StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default
+    }
 
     # Set hydra overrides for tpe sampler
     overrides.update(
         {
             HydraGroups.HYDRA_SWEEPER.value: "optuna",
-            HydraGroups.HYDRA_SWEEPER_SAMPLER.value: "tpe"
+            HydraGroups.HYDRA_SWEEPER_SAMPLER.value: "tpe",
         }
     )
 
@@ -89,9 +95,13 @@ def train_gradient_boosting_regressor_tpe():
         {
             StoreGroups.MODEL.value: "GradientBoostingRegressor",
             f"{StoreGroups.MODEL.value}.loss": "squared_error",
-            f"{StoreGroups.MODEL.value}.learning_rate": hz.multirun([0.1,0.01,0.001]),
-            f"{StoreGroups.MODEL.value}.n_estimators": hz.multirun([400,500,600,700,800]),
-            f"{StoreGroups.MODEL.value}.subsample": hz.multirun([0.1,0.25,0,4,0.5,0.6]),
+            f"{StoreGroups.MODEL.value}.learning_rate": hz.multirun([0.1, 0.01, 0.001]),
+            f"{StoreGroups.MODEL.value}.n_estimators": hz.multirun(
+                [400, 500, 600, 700, 800]
+            ),
+            f"{StoreGroups.MODEL.value}.subsample": hz.multirun(
+                [0.1, 0.25, 0, 4, 0.5, 0.6]
+            ),
         }
     )
 
@@ -109,10 +119,11 @@ def train_single_run():
 
 
 def train(user_mlruns_dir, train_val_data_path, test_data_path):
-
     # Initialize default stores
     initialize_stores(
-        mlruns_dir=user_mlruns_dir, train_val_data_path=train_val_data_path, test_data_path=test_data_path
+        mlruns_dir=user_mlruns_dir,
+        train_val_data_path=train_val_data_path,
+        test_data_path=test_data_path,
     )
 
     # Initialize default config

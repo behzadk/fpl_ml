@@ -27,6 +27,7 @@ class StoreGroups(Enum):
     METRICS = "metrics"
     VISUALISATIONS = "visualisations"
 
+
 class HydraGroups(Enum):
     HYDRA_SWEEPER = "hydra/sweeper"
     HYDRA_SWEEPER_SAMPLER = "hydra/sweeper/sampler"
@@ -134,4 +135,3 @@ def initialize_stores(
     _initialize_visualisations()
 
     hz.store.add_to_hydra_store(overwrite_ok=False)
-

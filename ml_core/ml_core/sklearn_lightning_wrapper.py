@@ -57,7 +57,6 @@ class SklearnModel:
         val_batch = data_module.val_dataloader().dataset[:]
         output_metrics = self._log(batch=val_batch, stage="val")
 
-
         # Log metrics and figures for test data
         data_module.setup("test")
         test_batch = data_module.test_dataloader().dataset[:]

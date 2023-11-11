@@ -1,10 +1,17 @@
 import hydra_zen as hz
 from ml_core.stores import StoreGroups
-from ml_core.preprocessing import StandardScaleColumns, OneHotEncodeColumns, SplitFeaturesAndLabels, DataframePipeline
+from ml_core.preprocessing import (
+    StandardScaleColumns,
+    OneHotEncodeColumns,
+    SplitFeaturesAndLabels,
+    DataframePipeline,
+)
 from projects.fpl_ml import constants
+
 
 class PreprocessingStores:
     default = "fpl_ml"
+
 
 def initialize_preprocessing_config():
     preprocessing_store = hz.store(group=StoreGroups.PREPROCESSING.value)
@@ -21,7 +28,7 @@ def initialize_preprocessing_config():
         scale_column_prefixes=[constants.Prefixes.ROLLING_AVERAGE],
         hydra_convert="all",
     )
-    
+
     # Onehot encode categorical features
     encode_step = hz.builds(
         OneHotEncodeColumns, columns_to_encode=categorical_features, hydra_convert="all"
@@ -38,7 +45,7 @@ def initialize_preprocessing_config():
     steps = [scale_step, encode_step, split_step]
 
     preprocessing_store(
-        DataframePipeline, dataframe_processing_steps=steps, name=PreprocessingStores.default
+        DataframePipeline,
+        dataframe_processing_steps=steps,
+        name=PreprocessingStores.default,
     )
-
-
