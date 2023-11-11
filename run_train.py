@@ -5,10 +5,12 @@ from typing import Union
 import mlflow
 import pytorch_lightning as pl
 import torch
+import hydra_zen as hz
 from hydra_zen import launch, zen
 from sklearn.base import RegressorMixin
 
-from fpl_ml.config import collect_config_store, initialize_stores
+from fpl_ml.config import collect_config_store
+from fpl_ml.stores import initialize_stores
 from fpl_ml.preprocessing import DataframePipeline
 from fpl_ml.train import train_sklearn
 from fpl_ml.user import User
@@ -69,7 +71,7 @@ def run_train(
 def train_random_forest_grid_search():
     """Example entry function, performing a grid search across several parameters of the sklearn RandomForestRegressor"""
 
-    config = store.get_entry("fpl_ml", "default_config")
+    config = hz.store.get_entry("fpl_ml", "default_config")
     task_function = zen(run_train)
 
     # Set parameter values we want for grid search
@@ -89,7 +91,7 @@ def train_random_forest_grid_search():
 
 def train_gradient_boosting_regressor_grid_search():
     """Example entry function, performing a grid search across several parameters of the sklearn GradientBoostingRegressor"""
-    config = store.get_entry("fpl_ml", "default_config")
+    config = hz.store.get_entry("fpl_ml", "default_config")
     task_function = zen(run_train)
 
     # Set parameter values we want for grid search
@@ -107,7 +109,7 @@ def train_gradient_boosting_regressor_grid_search():
 
 def train_single_run():
     """Example entry script, performing a single run using the default config parameters"""
-    config = store.get_entry(group="fpl_ml", name="default_config")
+    config = hz.store.get_entry(group="fpl_ml", name="default_config")
     task_function = zen(run_train)
 
     # Run gridsearch
@@ -127,8 +129,8 @@ if __name__ == "__main__":
     initialize_stores(
         mlruns_dir=user_mlruns_dir, train_val_data_path=train_val_data_path, test_data_path=test_data_path
     )
-    store = collect_config_store()
-    store.add_to_hydra_store(overwrite_ok=True)
+    collect_config_store()
+    hz.store.add_to_hydra_store(overwrite_ok=True)
 
     # train_single_run()
     # train_random_forest_grid_search()
