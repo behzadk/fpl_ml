@@ -1,4 +1,4 @@
-from projects.fpl_ml import preprocessing
+from fpl_ml_projects.fpl_ml import preprocessing
 import hydra_zen as hz
 
 
