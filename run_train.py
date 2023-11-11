@@ -1,7 +1,6 @@
 import os
 from user_config import PROCESSED_DATA_DIR, MLRUNS_DIR
-from projects import fpl_ml
-
+from fpl_ml_projects import fpl_ml
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
 

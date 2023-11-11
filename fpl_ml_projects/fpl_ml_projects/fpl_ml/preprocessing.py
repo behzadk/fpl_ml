@@ -6,7 +6,7 @@ from ml_core.preprocessing import (
     SplitFeaturesAndLabels,
     DataframePipeline,
 )
-from projects.fpl_ml import constants
+from fpl_ml_projects.fpl_ml import constants
 
 
 class PreprocessingStores:

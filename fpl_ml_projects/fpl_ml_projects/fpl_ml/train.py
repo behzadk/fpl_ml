@@ -9,13 +9,14 @@ import hydra_zen as hz
 from hydra_zen import launch, zen
 from sklearn.base import RegressorMixin
 
-from ml_core.config import collect_config_store
+from fpl_ml_projects.default_config import collect_config_store
+
 from ml_core.stores import StoreGroups, HydraGroups, initialize_stores
 from ml_core.preprocessing import DataframePipeline
 from ml_core.train import train_sklearn
 from ml_core.user import User
 from ml_core.utils import set_random_seeds, delete_runs_by_metric
-from projects import fpl_ml
+from fpl_ml_projects import fpl_ml
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
 
@@ -74,7 +75,7 @@ def run_train(
 
 
 def train_gradient_boosting_regressor_tpe():
-    config = hz.store.get_entry("fpl_ml", "default_config")
+    config = hz.store.get_entry("default", "default_config")
     task_function = zen(run_train)
 
     # Use the project default preprocessing pipeline
