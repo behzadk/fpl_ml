@@ -17,7 +17,7 @@ from fpl_ml.preprocessing import (
 )
 from fpl_ml.user import User
 from fpl_ml.visualisations import plot_regression_scatter
-
+from enum import Enum
 
 @dataclass
 class BaseConfig:
@@ -32,14 +32,25 @@ class BaseConfig:
     visualisations: Any = MISSING
 
 
+class StoreGroups(Enum):
+    USER = "user"
+    DATASET = "dataset"
+    DATAMODULE = "datamodule"
+    MODEL = "model"
+    PREPROCESSING = "preprocessing"
+    DATA_SPLITTER = "data_splitter"
+    METRICS = "metrics"
+    VISUALISATIONS = "visualisations"
+
+
 def _initialize_users(mlruns_dir: os.PathLike):
-    user_store = store(group="user")
+    user_store = store(group=StoreGroups.USER.value)
     user_store(User, mlruns_dir=mlruns_dir, device="cpu", name="default")
     user_store(User, mlruns_dir=mlruns_dir, device="gpu", name="gpu")
 
 
 def _initialize_datasets():
-    dataset_store = store(group="dataset")
+    dataset_store = store(group=StoreGroups.DATASET.value)
     dataset_store(Dataset, device="${user.device}", zen_partial=True, name="default")
 
 
@@ -48,7 +59,7 @@ def _initialize_datamodules(
     test_data_path: Optional[os.PathLike] = None,
     predict_data_path: Optional[os.PathLike] = None,
 ):
-    datamodule_store = store(group="datamodule")
+    datamodule_store = store(group=StoreGroups.Datamodule.value)
     datamodule_store(
         DataModuleLoadedFromCSV,
         train_validation_data_path=train_val_data_path,
@@ -63,7 +74,7 @@ def _initialize_datamodules(
 
 
 def _initialize_models():
-    model_store = store(group="model")
+    model_store = store(group=StoreGroups.MODEL.value)
 
     sklearn_regressors = [RandomForestRegressor, GradientBoostingRegressor]
 
@@ -73,7 +84,7 @@ def _initialize_models():
 
 
 def _initialize_metrics():
-    metrics_store = store(group="metrics")
+    metrics_store = store(group=StoreGroups.METRICS.value)
 
     mse = builds(MeanSquaredError, squared=True, num_outputs=1, hydra_convert="all")
     regression_metrics = {"MSE": mse}
@@ -81,7 +92,7 @@ def _initialize_metrics():
 
 
 def _initialize_preprocessing():
-    preprocessing_store = store(group="preprocessing")
+    preprocessing_store = store(group=StoreGroups.PREPROCESSING.value)
 
     numerical_features = [
         "X_game_week",
@@ -115,13 +126,13 @@ def _initialize_preprocessing():
 
 
 def _initialize_data_splitters():
-    data_splitter_store = store(group="data_splitter")
+    data_splitter_store = store(group=StoreGroups.DATA_SPLITTER.value)
 
     data_splitter_store(RandomSplitData, frac=0.8, name="default")
 
 
 def _initialize_visualisations():
-    visualisations_store = store(group="visualisations")
+    visualisations_store = store(group=StoreGroups.VISUALISATIONS.value)
 
     regression_scatter = builds(
         plot_regression_scatter, trendline=None, identity=True, zen_partial=True

@@ -75,10 +75,10 @@ def train_random_forest_grid_search():
     # Set parameter values we want for grid search
     overrides = [
         "model=RandomForestRegressor",
-        "model.n_estimators=100,200,300",
-        "model.max_features=0.1,0.25,0.5,0.75,1.0",
-        "model.max_depth=2,4,8,16",
-        "model.min_samples_split=2",
+        "model.n_estimators=400,500,600,700,800",
+        "model.max_features=0.05,0.1,0.25",
+        "model.max_depth=8,16",
+        "model.min_samples_split=2,4",
     ]
 
     # Run gridsearch
@@ -96,9 +96,9 @@ def train_gradient_boosting_regressor_grid_search():
     overrides = [
         "model=GradientBoostingRegressor",
         "model.loss=squared_error",
-        "model.learning_rate=0.1,0.5",
-        "model.n_estimators=300,400,500",
-        "model.subsample=0.25,0.5",
+        "model.learning_rate=0.1,0.01,0.001",
+        "model.n_estimators=400,500,600,700,800",
+        "model.subsample=0.1,0.25,0,4,0.5,0.6",
     ]
 
     # Run gridsearch
@@ -125,11 +125,11 @@ if __name__ == "__main__":
     test_data_path = os.path.join(PROCESSED_DATA_DIR, "test_data.csv")
 
     initialize_stores(
-        mlruns_dir=user_mlruns_dir, train_val_data_path=train_val_data_path
+        mlruns_dir=user_mlruns_dir, train_val_data_path=train_val_data_path, test_data_path=test_data_path
     )
     store = collect_config_store()
     store.add_to_hydra_store(overwrite_ok=True)
 
-    train_single_run()
-    train_random_forest_grid_search()
+    # train_single_run()
+    # train_random_forest_grid_search()
     train_gradient_boosting_regressor_grid_search()
