@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import mlflow
 import torch
 from torchmetrics import Metric
-
+from loguru import logger
 
 def log_metrics_and_visualisations(
     y_true: torch.Tensor,
@@ -30,10 +30,13 @@ def log_metrics_and_visualisations(
     if metrics:
         # Iterate, compute and log validation metrics
         for m in metrics.keys():
-            met = metrics[m](y_pred, y_true)
-            mlflow.log_metric(f"{stage}_{m}", met)
+            met = metrics[m].update(y_pred, y_true)
+            mlflow.log_metric(f"{stage}_{m}", metrics[m].compute())
 
             eval_metrics[f"{stage}_{m}"] = met
+
+            logger.info(f"{stage}_{m}")
+
 
     if visualisations:
         # Apply visualisation steps to validation data
