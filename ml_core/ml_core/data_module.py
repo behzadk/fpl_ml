@@ -1,7 +1,7 @@
 from typing import Callable
 
 import pandas as pd
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 import torch
 from torch.utils.data import DataLoader
 
@@ -20,6 +20,7 @@ class DataModuleLoadedFromCSV(pl.LightningDataModule):
         test_data_path: str | None = None,
         predict_data_path: str | None = None,
         batch_size: int | None = 32,
+        precision: int = 32,
         use_torch: bool = False,
         device: str = "cpu",
     ):
@@ -36,7 +37,7 @@ class DataModuleLoadedFromCSV(pl.LightningDataModule):
         self.train_validation_splitter = train_validation_splitter
         self.preprocessing_pipeline = preprocessing_pipeline
 
-        self._batch_size = batch_size
+        self.batch_size = batch_size
         self._use_torch = use_torch
         self._device = device
 
@@ -63,6 +64,8 @@ class DataModuleLoadedFromCSV(pl.LightningDataModule):
                 use_torch=self._use_torch,
                 device=self._device,
             )
+        elif stage == "validate":
+            pass
 
         elif stage == "test":
             assert (
@@ -97,13 +100,13 @@ class DataModuleLoadedFromCSV(pl.LightningDataModule):
             raise ValueError(f"stage {stage} not recognised")
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self._batch_size)
+        return DataLoader(self.train_dataset, batch_size=self.batch_size)
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self._batch_size)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self._batch_size)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size)
 
     def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, batch_size=self._batch_size)
+        return DataLoader(self.predict_dataset, batch_size=self.batch_size)
