@@ -1,7 +1,7 @@
 from typing import Callable, Union
 
 import numpy as np
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 import torch
 from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics.metric import Metric
