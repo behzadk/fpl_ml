@@ -8,6 +8,6 @@ def randomly_split_data(df, test_frac):
     elif test_frac == 0.0:
         return df[0:0], df
 
-    df_a, df_b = train_test_split(df, test_size=1 - test_frac, shuffle=True)
+    df_a, df_b = train_test_split(df, test_size=test_frac, shuffle=True)
 
     return df_a, df_b
