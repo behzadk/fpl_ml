@@ -99,3 +99,26 @@ def delete_runs_by_metric(
         for r in drop_runs.run_id:
             mlflow.delete_run(run_id=r)
             remove_run_dir(f"{mlruns_dir}/{r}/")
+
+
+def get_base_class(obj: object) -> str:
+    """
+    Returns the name of the base class of the given object.
+
+    Args:
+        obj (object): The object whose base class name is to be returned.
+
+    Returns:
+        str: The name of the base class of the given object.
+    """
+    class_name = (
+        (str(obj.__class__.__bases__))
+        .replace("'", "")
+        .replace(">", "")
+        .replace("<", "")
+        .replace(",)", "")
+    )
+
+    class_name = class_name.split()[1].split(".")[0]
+
+    return class_name
