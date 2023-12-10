@@ -5,7 +5,7 @@ from glob import glob
 import pandas as pd
 from loguru import logger
 
-from fpl_ml.utils import add_prefix_to_columns, get_columns_with_prefix
+from ml_core.utils import add_prefix_to_columns, get_columns_with_prefix
 from user_config import PROCESSED_DATA_DIR, VAASTAV_FPL_DIR
 
 
