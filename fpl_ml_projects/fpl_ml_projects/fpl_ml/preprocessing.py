@@ -11,6 +11,7 @@ from fpl_ml_projects.fpl_ml import constants
 
 class PreprocessingStores:
     default = "fpl_ml"
+    diabetes = "diabetes"
 
 
 def initialize_preprocessing_config():
@@ -48,4 +49,18 @@ def initialize_preprocessing_config():
         DataframePipeline,
         dataframe_processing_steps=steps,
         name=PreprocessingStores.default,
+    )
+
+    # Split features and labels using the X prefix and total_points label
+    diabetes_split_step = hz.builds(
+        SplitFeaturesAndLabels,
+        x_column_prefixes=[constants.Prefixes.X],
+        y_columns=["Y_target"],
+        hydra_convert="all",
+    )
+
+    preprocessing_store(
+        DataframePipeline,
+        dataframe_processing_steps=[diabetes_split_step],
+        name=PreprocessingStores.diabetes,
     )
