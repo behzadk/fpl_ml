@@ -13,7 +13,7 @@ class Dataset(torch.utils.data.Dataset):
         predict: bool = False,
         use_torch: bool = False,
         device: str = "cpu",
-        precision: int = 32
+        precision: int = 32,
     ):
         self._X = X
         self._y = y
@@ -23,8 +23,8 @@ class Dataset(torch.utils.data.Dataset):
 
         if use_torch:
             # Move all data to device
-            self._X = torch.from_numpy(self._X.astype(f'float{precision}')).to(device)
-            self._y = torch.from_numpy(self._y.astype(f'float{precision}')).to(device)
+            self._X = torch.from_numpy(self._X.astype(f"float{precision}")).to(device)
+            self._y = torch.from_numpy(self._y.astype(f"float{precision}")).to(device)
 
             logger.info(self._X.dtype)
 

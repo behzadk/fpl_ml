@@ -1,0 +1,9 @@
+data_dir: a_data_directory
+
+# Directory where we want to write prepared data
+processed_data_dir: ${data_dir}/demo_data/
+mlruns_dir: ${data_dir}/mlruns/
+
+defaults:
+  - _self_
+  - train: demo

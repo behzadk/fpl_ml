@@ -5,6 +5,7 @@ import torch
 from torchmetrics import Metric
 from loguru import logger
 
+
 def log_metrics_and_visualisations(
     y_true: torch.Tensor,
     y_pred: torch.Tensor,
@@ -36,7 +37,6 @@ def log_metrics_and_visualisations(
             eval_metrics[f"{stage}_{m}"] = met
 
             logger.info(f"{stage}_{m}")
-
 
     if visualisations:
         # Apply visualisation steps to validation data
