@@ -5,7 +5,6 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from torchmetrics import Metric
 
 from ml_core.sklearn_lightning_wrapper import SklearnModel
-from ml_core.torch_lightning_wrapper import BasicTorchModel
 from ml_core.utils import set_random_seeds, get_base_class
 import torch
 from functools import partial
@@ -13,7 +12,6 @@ import lightning.pytorch as pl
 import torchmetrics
 from ml_core.user import User
 from ml_core.preprocessing import DataframePipeline
-
 
 
 def run_train(
@@ -26,8 +24,7 @@ def run_train(
     visualisations: dict,
     optimizer: Optional[partial[torch.optim.Optimizer]],
     loss: Optional[Union[torch.nn.Module, torchmetrics.Metric]] = None,
-    trainer: Optional[pl.Trainer] = None
-
+    trainer: Optional[pl.Trainer] = None,
 ):
     """Main train task function, This takes all the configs and uses them to train an sklearn model.
 
@@ -71,7 +68,11 @@ def run_train(
             random_seed=user.random_seed,
         )
 
-    elif model_base_class == "lightning" or model_base_class=='torch' or model_base_class == "ml_core":
+    elif (
+        model_base_class == "lightning"
+        or model_base_class == "torch"
+        or model_base_class == "ml_core"
+    ):
         output_metrics = train_torch(
             data_module=datamodule,
             model=model,
@@ -81,7 +82,7 @@ def run_train(
             trainer=trainer,
             experiment_name="Test",
             visualisations=visualisations,
-            return_validation_metrics=['val_MSE'],
+            return_validation_metrics=["val_MSE"],
             random_seed=user.random_seed,
         )
 
@@ -89,6 +90,7 @@ def run_train(
     set_random_seeds(None)
 
     return output_metrics
+
 
 def train_sklearn(
     data_module: pl.LightningDataModule,
@@ -124,7 +126,9 @@ def train_sklearn(
 
         return ret_metrics
 
-def train_torch(data_module: pl.LightningDataModule,
+
+def train_torch(
+    data_module: pl.LightningDataModule,
     model: pl.LightningModule,
     metrics: dict[str, Metric],
     experiment_name: str,
@@ -133,18 +137,16 @@ def train_torch(data_module: pl.LightningDataModule,
     trainer: pl.Trainer,
     loss: Union[torch.nn.Module, torchmetrics.Metric],
     return_validation_metrics: Optional[list[str]] = None,
-    random_seed: Union[int, None] = None, 
-    ):
-
+    random_seed: Union[int, None] = None,
+):
     mlflow.set_experiment(experiment_name=experiment_name)
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
-
     with mlflow.start_run(experiment_id=experiment.experiment_id):
-        model = BasicTorchModel(model, visualisations=visualisations, metrics=metrics)
+        model.log_model_params()
 
         mlflow.pytorch.autolog(log_datasets=False)
-        
+
         # Seed everything and log the seed
         random_seed = set_random_seeds(random_seed)
         mlflow.log_param("seed", random_seed)
@@ -154,32 +156,45 @@ def train_torch(data_module: pl.LightningDataModule,
         )
 
         mlflow.log_param("batch_size", data_module.batch_size)
-        model.setup_train(data_module=data_module, metrics=metrics, partial_optimizer=partial_optimizer, loss=loss)
+        model.setup_train(
+            data_module=data_module,
+            metrics=metrics,
+            visualisations=visualisations,
+            partial_optimizer=partial_optimizer,
+            loss=loss,
+        )
 
         # This setup is only run at the first instance of training
         trainer.fit(model=model, train_dataloaders=data_module)
         validation_outputs = trainer.validate(model=model, dataloaders=data_module)
         outputs = validation_outputs[0]
 
-
         trainer.test(model=model, dataloaders=data_module)
 
-        
         # After training, log figures for training and validation steps
         with torch.no_grad():
             model._log_metrics(
-                data_module.train_dataloader().dataset[:], stage="training", log_visualisations=True, log_metrics=False
+                data_module.train_dataloader().dataset[:],
+                stage="training",
+                log_visualisations=True,
+                log_metrics=False,
             )
             model._log_metrics(
-                data_module.val_dataloader().dataset[:], stage="val", log_visualisations=True, log_metrics=False
+                data_module.val_dataloader().dataset[:],
+                stage="val",
+                log_visualisations=True,
+                log_metrics=False,
             )
             model._log_metrics(
-                data_module.test_dataloader().dataset[:], stage="test", log_visualisations=True, log_metrics=False
+                data_module.test_dataloader().dataset[:],
+                stage="test",
+                log_visualisations=True,
+                log_metrics=False,
             )
 
         if return_validation_metrics:
             output_metrics = tuple(outputs[x] for x in return_validation_metrics)
-            
+
             if len(output_metrics) == 1:
                 return output_metrics[0]
 

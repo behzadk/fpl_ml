@@ -1,0 +1,12 @@
+data_dir: a_data_directory
+
+# Directory where we want to write prepared data
+processed_data_dir: ${data_dir}/processed/
+mlruns_dir: ${data_dir}/mlruns/
+
+# Directory where https://github.com/vaastav/Fantasy-Premier-League is cloned to
+vaastav_fpl_dir: '/mnt/c/Users/behza/Documents/code/Fantasy-Premier-League/'
+
+defaults:
+  - _self_
+  - train: fpl_ml

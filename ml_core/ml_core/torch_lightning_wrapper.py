@@ -5,45 +5,45 @@ from ml_core.log import log_metrics_and_visualisations
 from functools import partial
 import torchmetrics
 from lightning import LightningModule
+from typing import Callable
+
 
 class BasicTorchModel(LightningModule):
     def __init__(
         self,
         model: torch.nn.Module,
-        visualisations,
-        metrics: dict[str, torchmetrics.Metric],
-        features_key: str = "X",
-        labels_key: str = "y",
     ):
         super().__init__()
 
         self._model = model
-        self._features_key = features_key
-        self._labels_key = labels_key
-        self._visualisations = visualisations
-        self._metrics = metrics
-
 
     def forward(self, inputs, target):
         return self._call_model(inputs, target)
-    
+
     def setup_train(
         self,
         data_module: pl.LightningDataModule,
+        visualisations: dict[str, Callable],
         metrics: dict[str, torchmetrics.Metric],
-        partial_optimizer:partial[torch.optim.Optimizer],
+        partial_optimizer: partial[torch.optim.Optimizer],
         loss: torchmetrics.Metric,
+        features_key: str = "X",
+        labels_key: str = "y",
     ):
         self._data_module = data_module
 
+        self._visualisations = visualisations
+
         self._metrics = metrics
         self._set_metric_attributes()
-
 
         self._partial_optimizer = partial_optimizer
         self._loss = loss
 
         self._loss.is_differentiable = True
+
+        self._features_key = features_key
+        self._labels_key = labels_key
 
     def training_step(self, batch, batch_idx):
         y_hat = self._call_model(batch)
@@ -61,7 +61,6 @@ class BasicTorchModel(LightningModule):
             getattr(self, f"val_{m}").update(y_hat, batch[self._labels_key])
 
         return loss
-
 
     def on_validation_epoch_end(self):
         for m in self._metrics:
@@ -85,7 +84,6 @@ class BasicTorchModel(LightningModule):
         return self._loss(y_hat, batch[self._labels_key])
 
     def _log_metrics(self, batch, stage, log_visualisations=False, log_metrics=True):
-
         logger.info("Generating validation metrics...")
 
         metrics = None
@@ -109,7 +107,6 @@ class BasicTorchModel(LightningModule):
 
     def _call_model(self, batch: dict[str, torch.tensor]) -> torch.Tensor:
         return self._model(batch[self._features_key])
-    
 
     def _set_metric_attributes(self):
         """Sets metrics as attributes using the key from the

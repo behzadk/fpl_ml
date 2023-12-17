@@ -208,12 +208,12 @@ def get_season_start_year(year_string):
 
 def main():
     output_data_dir = PROCESSED_DATA_DIR
-    raw_data_dir = os.path.join(VAASTAV_FPL_DIR, 'data')
+    raw_data_dir = os.path.join(VAASTAV_FPL_DIR, "data")
 
     os.makedirs(output_data_dir, exist_ok=True)
 
     master_team_df = pd.read_csv(os.path.join(raw_data_dir, "master_team_list.csv"))
-        
+
     master_team_df = master_team_df.rename(columns={"id": "team_id"})
 
     # Use list comprehension to generate a list of DataFrames
@@ -257,6 +257,7 @@ def main():
     master_df["starting_year"] = master_df.apply(
         lambda row: get_season_start_year(row["season"]), axis=1
     )
+    master_df = _generate_player_summary_statistics(master_df)
 
     X = [
         "value",
@@ -268,25 +269,25 @@ def main():
     ]
     y = ["total_points"]
 
-    rolling_mean_columns = get_columns_with_prefix(master_df, prefix_list=['rolling_mean_'])
+    rolling_mean_columns = get_columns_with_prefix(
+        master_df, prefix_list=["rolling_mean_"]
+    )
     X.extend(rolling_mean_columns)
-
-    master_df = _generate_player_summary_statistics(master_df)
 
     # Holdout year for test set
     test_year = 2022
-    test_df = master_df.loc[master_df['starting_year'] == test_year][[*X, *y]]
+    test_df = master_df.loc[master_df["starting_year"] == test_year][[*X, *y]]
 
-    train_df = master_df.loc[master_df['starting_year'] != test_year][[*X, *y]]
+    train_df = master_df.loc[master_df["starting_year"] != test_year][[*X, *y]]
 
     test_df = add_prefix_to_columns(test_df, columns=X, prefix="X_")
     train_df = add_prefix_to_columns(train_df, columns=X, prefix="X_")
 
+    train_df.to_csv(os.path.join(output_data_dir, "train_val_data.csv"), index=False)
+    test_df.to_csv(os.path.join(output_data_dir, "test_data.csv"), index=False)
 
-    train_df.to_csv(os.path.join(output_data_dir, 'train_val_data.csv'), index=False)
-    test_df.to_csv(os.path.join(output_data_dir, 'test_data.csv'), index=False)
+    master_df.to_csv(os.path.join(output_data_dir, "master.csv"), index=False)
 
-    master_df.to_csv(os.path.join(output_data_dir, 'master.csv'), index=False)
 
 if __name__ == "__main__":
     main()

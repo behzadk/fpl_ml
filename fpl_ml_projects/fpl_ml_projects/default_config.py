@@ -18,6 +18,7 @@ class SklearnBaseConfig:
     metrics: Any = hz.MISSING
     visualisations: Any = hz.MISSING
 
+
 @dataclass
 class TorchBaseConfig:
     # Must be passed at command line -- neccesary arguments
@@ -65,6 +66,7 @@ def make_default_sklearn_config_store():
     hz.store(config, group="default", name="default_sklearn_config")
     hz.store.add_to_hydra_store(overwrite_ok=False)
 
+
 def make_default_torch_config_store():
     zen_config = []
 
@@ -91,7 +93,7 @@ def make_default_torch_config_store():
             {StoreGroups.OPTIMIZER.value: "default"},
             {StoreGroups.TRAINER.value: "default"},
             {StoreGroups.CALLBACKS.value: "default"},
-            {StoreGroups.LOSS.value: "MSE"}
+            {StoreGroups.LOSS.value: "MSE"},
         ]
     )
 

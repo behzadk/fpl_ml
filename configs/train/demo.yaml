@@ -1,0 +1,4 @@
+_target_: fpl_ml_projects.demo.project_train.train_demo_tpe_torch_run
+user_mlruns_dir: ${mlruns_dir}
+train_val_data_path: ${processed_data_dir}diabetes_train.csv
+test_data_path: ${processed_data_dir}diabetes_test.csv

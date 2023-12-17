@@ -1,5 +1,4 @@
 import os
-import numpy as np
 
 import hydra_zen as hz
 from hydra_zen import launch, zen
@@ -50,14 +49,24 @@ def train_gradient_boosting_regressor_tpe():
     (jobs,) = launch(config["node"], task_function, overrides=overrides, multirun=True)
 
 
-def train_torch_tpe():
+def train_torch_tpe(user_mlruns_dir, train_val_data_path, test_data_path):
     """Example entry script, performing a single run using the default config parameters"""
-    config = hz.store.get_entry(group="default", name="default_torch_config")
-    task_function = zen(run_train)
+
+    # Initialize default stores and default config
+    initialize_stores(
+        mlruns_dir=user_mlruns_dir,
+        train_val_data_path=train_val_data_path,
+        test_data_path=test_data_path,
+    )
+    make_default_torch_config_store()
+
+    # Initialzie project specific configs
+    fpl_ml.stores.initialize_project_configs()
+    hz.store.add_to_hydra_store(overwrite_ok=False)  #
 
     # Use the project default preprocessing pipeline
     overrides = {
-        f"{StoreGroups.MODEL.value}.input_dim": 59,
+        f"{StoreGroups.MODEL.value}.input_dim": 79,
         f"{StoreGroups.MODEL.value}.output_dim": 1,
         StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default,
         StoreGroups.USER.value: "default-cpu",
@@ -75,21 +84,20 @@ def train_torch_tpe():
     # Set prior space for tpe sampler
     overrides.update(
         {
-            f"{StoreGroups.MODEL.value}.hidden_layer_sizes.0": hz.multirun(
-                [5, 10, 100, 250]
+            f"{StoreGroups.MODEL.value}.hidden_layer_sizes": hz.multirun(
+                [[500], [100], [50, 25], [100, 50, 25], [100, 50], [250, 50]]
             ),
-            f"{StoreGroups.MODEL.value}.dropout": hz.multirun(
-                [0.2, 0.3, 0.4, 0.5, 0.6, 0.8]
-            ),
-            f"{StoreGroups.OPTIMIZER.value}.lr": hz.multirun([0.1, 0.01, 0.001]),
-            f"{StoreGroups.TRAINER.value}.max_epochs": hz.multirun(
-                [1]
-            ),
+            f"{StoreGroups.MODEL.value}.dropout": hz.multirun([0.2, 0.3, 0.5]),
+            f"{StoreGroups.OPTIMIZER.value}.lr": hz.multirun([0.01, 0.001, 0.0001]),
+            f"{StoreGroups.TRAINER.value}.max_epochs": hz.multirun([50]),
             f"{StoreGroups.DATAMODULE.value}.batch_size": hz.multirun(
-                [512]
+                [16, 32, 64, 128, 512]
             ),
         }
     )
+
+    config = hz.store.get_entry(group="default", name="default_torch_config")
+    task_function = zen(run_train)
 
     # Run gridsearch
     launch(config["node"], task_function, overrides=overrides, multirun=True)
@@ -100,12 +108,6 @@ def train_single_torch_run():
     config = hz.store.get_entry(group="default", name="default_torch_config")
     task_function = zen(run_train)
 
-    # # Use the project default preprocessing pipeline
-    # overrides = {
-    #     StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default,
-    #     StoreGroups.USER.value: "default-gpu"
-    # }
-
     # Use the project default preprocessing pipeline
     overrides = {
         StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.diabetes,
@@ -114,101 +116,3 @@ def train_single_torch_run():
 
     # Run gridsearch
     launch(config["node"], task_function, overrides=overrides, multirun=False)
-
-
-def train_demo_tpe_torch_run():
-    """Example entry script, performing a single run using the default config parameters"""
-    config = hz.store.get_entry(group="default", name="default_torch_config")
-    task_function = zen(run_train)
-
-    # # Use the project default preprocessing pipeline
-    # overrides = {
-    #     StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default,
-    #     StoreGroups.USER.value: "default-gpu"
-    # }
-
-    # Use the project default preprocessing pipeline
-    overrides = {
-        f"{StoreGroups.MODEL.value}.input_dim": 10,
-        f"{StoreGroups.MODEL.value}.output_dim": 1,
-        StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.diabetes,
-        StoreGroups.USER.value: "default-cpu",
-    }
-
-    # Set hydra overrides for tpe sampler
-    overrides.update(
-        {
-            HydraGroups.HYDRA_SWEEPER.value: "optuna",
-            HydraGroups.HYDRA_SWEEPER_SAMPLER.value: "tpe",
-            f"+{HydraGroups.HYDRA_SWEEPER.value}/n_trials": 100,
-        }
-    )
-
-    # Set prior space for tpe sampler
-    overrides.update(
-        {
-            f"{StoreGroups.MODEL.value}.hidden_layer_sizes.0": hz.multirun(
-                [5, 10, 100, 250]
-            ),
-            f"{StoreGroups.MODEL.value}.dropout": hz.multirun(
-                [0.2, 0.3, 0.4, 0.5, 0.6, 0.8]
-            ),
-            f"{StoreGroups.OPTIMIZER.value}.lr": hz.multirun([0.1, 0.01, 0.001]),
-            f"{StoreGroups.TRAINER.value}.max_epochs": hz.multirun(
-                list(np.arange(1, 100, 5))
-            ),
-            f"{StoreGroups.DATAMODULE.value}.batch_size": hz.multirun(
-                [2, 6, 8, 12, 32, 64, 128, 256, 512]
-            ),
-        }
-    )
-
-    # Run gridsearch
-    launch(config["node"], task_function, overrides=overrides, multirun=True)
-
-
-def train(user_mlruns_dir, train_val_data_path, test_data_path):
-    # Initialize default stores
-    initialize_stores(
-        mlruns_dir=user_mlruns_dir,
-        train_val_data_path=train_val_data_path,
-        test_data_path=test_data_path,
-    )
-
-    # Initialize default config
-    make_default_torch_config_store()
-
-    # Initialzie project specific configs
-    fpl_ml.stores.initialize_project_configs()
-
-    # Add configs to hydra store
-    hz.store.add_to_hydra_store(overwrite_ok=False)
-
-    # Run hyperparameter optimization using tpe sampler
-    # train_single_torch_run()
-    train_torch_tpe()
-    # train_gradient_boosting_regressor_tpe()
-
-
-def train_demo(user_mlruns_dir, train_val_data_path, test_data_path):
-    # Initialize default stores
-    initialize_stores(
-        mlruns_dir=user_mlruns_dir,
-        train_val_data_path=train_val_data_path,
-        test_data_path=test_data_path,
-    )
-
-    # Initialize default config
-    make_default_torch_config_store()
-
-    # Initialzie project specific configs
-    fpl_ml.stores.initialize_project_configs()
-
-    # Add configs to hydra store
-    hz.store.add_to_hydra_store(overwrite_ok=False)
-
-    # Run hyperparameter optimization using tpe sampler
-    # train_single_torch_run()
-    train_demo_tpe_torch_run()
-    # train_torch_tpe()
-    # train_gradient_boosting_regressor_tpe()

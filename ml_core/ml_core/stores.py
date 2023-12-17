@@ -15,10 +15,11 @@ from ml_core.preprocessing import (
 )
 from ml_core.user import User
 from ml_core.visualisations import plot_regression_scatter
-from ml_core.torch_models import neural_network
+from ml_core.torch_models import NeuralNetwork
 from torch import nn
 import torch
 import lightning.pytorch as pl
+
 
 class StoreGroups(Enum):
     USER = "user"
@@ -30,7 +31,6 @@ class StoreGroups(Enum):
     METRICS = "metrics"
     VISUALISATIONS = "visualisations"
 
-    
     # Pytorch specific
     TORCH_MODEL = "torch_model"
     OPTIMIZER = "optimizer"
@@ -75,7 +75,6 @@ def _initialize_datamodules(
         name="default-sklearn",
     )
 
-
     datamodule_store(
         DataModuleLoadedFromCSV,
         train_validation_data_path=train_val_data_path,
@@ -101,21 +100,22 @@ def _initialize_models():
     for regressor in sklearn_regressors:
         model_store(regressor, name=regressor.__name__)
 
+    model_store(
+        NeuralNetwork,
+        input_dim=48,
+        output_dim=1,
+        hidden_layer_sizes=[64],
+        activation_function=nn.ReLU,
+        dropout=0.2,
+        output_function=None,
+        name="neural_network",
+    )
 
-
-    model_store(neural_network,
-                input_dim=48, 
-                output_dim=1,
-                      hidden_layer_sizes=[64],
-                      activation_function=nn.ReLU,
-                      dropout=0.2,
-                      output_function=None,
-                      name="neural_network")
 
 def _initialize_model_wrappers():
-    """TODO; add model wrappers for sklearn models and torch model
-    """
+    """TODO; add model wrappers for sklearn models and torch model"""
     pass
+
 
 def _initialize_metrics():
     metrics_store = hz.store(group=StoreGroups.METRICS.value)
@@ -161,24 +161,37 @@ def _initialize_visualisations():
 
 def _initialize_optimizers():
     optimizer_store = hz.store(group=StoreGroups.OPTIMIZER.value)
-    optimizer_store(torch.optim.Adam, 
-                    lr=0.001, 
-                    weight_decay=0.0, 
-                    name="default", zen_partial=True)
+    optimizer_store(
+        torch.optim.Adam, lr=0.001, weight_decay=0.0, name="default", zen_partial=True
+    )
+
 
 def _initialize_trainers():
     trainer_store = hz.store(group=StoreGroups.TRAINER.value)
-    trainer_store(pl.Trainer, max_epochs=1, accelerator="${user.device}", 
-                  precision="${datamodule.precision}", callbacks="${callbacks}", name="default", log_every_n_steps=1)
-    
+    trainer_store(
+        pl.Trainer,
+        max_epochs=1,
+        accelerator="${user.device}",
+        precision="${datamodule.precision}",
+        callbacks="${callbacks}",
+        name="default",
+        log_every_n_steps=1,
+    )
+
+
 def _initialize_callbacks():
     callbacks_store = hz.store(group=StoreGroups.CALLBACKS.value)
 
-    early_stop = hz.builds(pl.callbacks.early_stopping.EarlyStopping,
-                           monitor="val_loss", mode="min", 
-                           min_delta=0.00001, patience=1000)
+    early_stop = hz.builds(
+        pl.callbacks.early_stopping.EarlyStopping,
+        monitor="val_loss",
+        mode="min",
+        min_delta=0.001,
+        patience=0,
+    )
 
     callbacks_store([early_stop], name="default")
+
 
 def _initialize_loss():
     loss_store = hz.store(group=StoreGroups.LOSS.value)
