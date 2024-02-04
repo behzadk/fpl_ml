@@ -86,10 +86,9 @@ class SklearnModel:
             )
 
         # Move to pytorch tensor for torchmetrics compatibility
-        y_true =  torch.from_numpy(y_true).float().to("cpu", dtype=torch.float32)
+        y_true = torch.from_numpy(y_true).float().to("cpu", dtype=torch.float32)
         y_pred = torch.from_numpy(y_pred).float().to("cpu", dtype=torch.float32)
 
-                
         output_metrics = log_metrics_and_visualisations(
             y_true,
             y_pred,

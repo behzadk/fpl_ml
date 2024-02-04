@@ -116,14 +116,12 @@ def train_sklearn(
             python_model=datamodule.preprocessing_pipeline,
         )
 
-
         # Seed everything and log the seed
         random_seed = set_random_seeds(random_seed)
         mlflow.log_param("seed", random_seed)
 
         # Fit model
         output_metrics = model.fit(datamodule)
-    
 
     # Optionally return metrics for hyperparameter optimization
     if return_validation_metrics:

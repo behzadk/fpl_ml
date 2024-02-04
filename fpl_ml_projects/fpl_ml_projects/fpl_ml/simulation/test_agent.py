@@ -17,5 +17,6 @@ class TestBaseAgent(unittest.TestCase):
 
         self.assertTrue(agent.team.check_team_legality())
 
+
 if __name__ == "__main__":
     unittest.main()

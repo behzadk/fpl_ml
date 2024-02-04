@@ -127,10 +127,12 @@ def _initialize_metrics():
     spearman_rank = hz.builds(SpearmanCorrCoef, num_outputs=1, hydra_convert="all")
     r2_score = hz.builds(R2Score, num_outputs=1, hydra_convert="all")
 
-    regression_metrics = {"MSE": mse, 
-                          "MAE": mae,
-                          "SpearmanCorrCoef": spearman_rank,
-                          "R2Score": r2_score}
+    regression_metrics = {
+        "MSE": mse,
+        "MAE": mae,
+        "SpearmanCorrCoef": spearman_rank,
+        "R2Score": r2_score,
+    }
 
     metrics_store(regression_metrics, name="regression_default", hydra_convert="all")
 

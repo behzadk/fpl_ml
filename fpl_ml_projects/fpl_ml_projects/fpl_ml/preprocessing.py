@@ -21,8 +21,6 @@ def initialize_preprocessing_config():
     numerical_features = constants.NumericalFeatures.ALL
     categorical_features = constants.CategoricalFeatures.ALL
 
-    steps = []
-
     # Scale numerical features
     scale_step = hz.builds(
         StandardScaleColumns,
@@ -42,8 +40,12 @@ def initialize_preprocessing_config():
     # Split features and labels using the X prefix and total_points label
     split_step = hz.builds(
         SplitFeaturesAndLabels,
-        x_column_prefixes=[f'{constants.Prefixes.X}value', f'{constants.Prefixes.X}opponent_team', 
-                           f'{constants.Prefixes.X}element_type', f'{constants.Prefixes.X}rolling_'],
+        x_column_prefixes=[
+            f"{constants.Prefixes.X}value",
+            f"{constants.Prefixes.X}opponent_team",
+            f"{constants.Prefixes.X}element_type",
+            f"{constants.Prefixes.X}rolling_",
+        ],
         y_columns=[constants.Labels.TOTAL_POINTS],
         hydra_convert="all",
     )
@@ -55,7 +57,7 @@ def initialize_preprocessing_config():
     )
     preprocessing_store(
         DataframePipeline,
-        dataframe_processing_steps= [scale_step, encode_step, split_step],
+        dataframe_processing_steps=[scale_step, encode_step, split_step],
         name=PreprocessingStores.scaled,
     )
 

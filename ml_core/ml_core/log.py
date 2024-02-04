@@ -31,7 +31,7 @@ def log_metrics_and_visualisations(
     if metrics:
         # Iterate, compute and log validation metrics
         for m in metrics.keys():
-            met = metrics[m].update(y_pred, y_true)
+            metrics[m].update(y_pred, y_true)
             mlflow.log_metric(f"{stage}_{m}", metrics[m].compute())
 
             eval_metrics[f"{stage}_{m}"] = metrics[m].compute()
