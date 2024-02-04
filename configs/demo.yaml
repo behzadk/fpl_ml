@@ -1,4 +1,4 @@
-data_dir: a_data_directory
+data_dir: /mnt/c/Users/behza/Documents/code/data/fpl_ml
 
 # Directory where we want to write prepared data
 processed_data_dir: ${data_dir}/demo_data/
