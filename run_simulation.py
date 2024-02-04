@@ -3,7 +3,6 @@ from fpl_ml_projects.fpl_ml.constants import NumericalFeatures, Labels
 from fpl_ml_projects.fpl_ml.simulation.environment import FPLEnv
 from fpl_ml_projects.fpl_ml.constants import RewardType
 import pandas as pd
-
 from ml_core.mlflow_utils import get_experiment_runs, load_model
 import mlflow
 
