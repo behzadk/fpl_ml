@@ -1,16 +1,13 @@
-from math import e
 from fpl_ml_projects.fpl_ml.constants import (
     Positions,
     CategoricalFeatures,
     NumericalFeatures,
-    Labels
+    Labels,
 )
 from fpl_ml_projects.fpl_ml.simulation.user import UserTeam
 from fpl_ml_projects.fpl_ml.simulation.player import Player
 import pandas as pd
 import numpy as np
-from loguru import logger
-from torch import Value
 
 
 def make_player_pool(gw_df, points_column=None):
@@ -20,11 +17,11 @@ def make_player_pool(gw_df, points_column=None):
     player_pool = []
     for _, row in gw_df.iterrows():
         player = Player(
-                name=row["player_name"],
-                position=row[CategoricalFeatures.ELEMENT_TYPE],
-                value=row[NumericalFeatures.VALUE],
-                club=row[CategoricalFeatures.TEAM_NAME],
-            )
+            name=row["player_name"],
+            position=row[CategoricalFeatures.ELEMENT_TYPE],
+            value=row[NumericalFeatures.VALUE],
+            club=row[CategoricalFeatures.TEAM_NAME],
+        )
 
         if points_column:
             player.points = row[points_column]
@@ -46,11 +43,15 @@ def sample_legal_team(
     Sample a legal team from the season_df
     """
 
-    keep_columns = [name_column, position_column, value_column, club_column, points_column]
+    keep_columns = [
+        name_column,
+        position_column,
+        value_column,
+        club_column,
+        points_column,
+    ]
     keep_columns = [c for c in keep_columns if c is not None]
-    season_df = season_df[
-       keep_columns
-    ].drop_duplicates()
+    season_df = season_df[keep_columns].drop_duplicates()
     sampled_players = []
     sampled_player_names = []
 
@@ -62,7 +63,7 @@ def sample_legal_team(
         illegal_clubs = [club for club, count in player_club_count.items() if count > 2]
 
         return [p for p in player_pool if p.club not in illegal_clubs]
-    
+
     def _sample_player(player_pool, position, all_player_names, all_sampled_player):
         sub_player_pool = [p for p in player_pool if p.position == position]
         sub_player_pool = _remove_illegal_clubs(sub_player_pool, all_sampled_player)
@@ -108,12 +109,14 @@ def sample_legal_team(
         expensive_player = sorted(team.players, key=lambda x: x.value, reverse=True)[0]
 
         # Transfer the player for a cheaper player
-        cheaper_player_pool = [p for p in player_pool if p.value < expensive_player.value]
+        cheaper_player_pool = [
+            p for p in player_pool if p.value < expensive_player.value
+        ]
         cheaper_player = _sample_player(
             cheaper_player_pool,
-            expensive_player.position, 
-            sampled_player_names, 
-            sampled_players
+            expensive_player.position,
+            sampled_player_names,
+            sampled_players,
         )
 
         # Transfer the player
@@ -157,7 +160,14 @@ class BaseAgent:
 
 
 class HillClimbingAgent(BaseAgent):
-    def __init__(self, name: str, team: UserTeam, n_iterations: int = 100, n_restarts: int = 10, points_column: str = Labels.TOTAL_POINTS):
+    def __init__(
+        self,
+        name: str,
+        team: UserTeam,
+        n_iterations: int = 100,
+        n_restarts: int = 10,
+        points_column: str = Labels.TOTAL_POINTS,
+    ):
         super().__init__(name, team)
 
         self.n_iterations = n_iterations
@@ -183,17 +193,22 @@ class HillClimbingAgent(BaseAgent):
         best_team = None
 
         for _ in range(self.n_restarts):
-            current_team, player_pool = sample_legal_team(gw_df, points_column=self.points_column)
+            current_team, player_pool = sample_legal_team(
+                gw_df, points_column=self.points_column
+            )
             for x in range(self.n_iterations):
-                    
                 # Randomly select player from team
                 transfer_out_player = np.random.choice(current_team.players)
 
                 # Get players in removed player's position
-                sub_player_pool = [p for p in player_pool if p.position == transfer_out_player.position]
+                sub_player_pool = [
+                    p for p in player_pool if p.position == transfer_out_player.position
+                ]
 
                 # Subset for players with a higher points
-                sub_player_pool = [p for p in sub_player_pool if p.points > transfer_out_player.points]
+                sub_player_pool = [
+                    p for p in sub_player_pool if p.points > transfer_out_player.points
+                ]
 
                 if len(sub_player_pool) == 0:
                     continue
@@ -202,21 +217,23 @@ class HillClimbingAgent(BaseAgent):
                 transfer_in_player = np.random.choice(sub_player_pool)
 
                 new_team = current_team.clone()
-                new_team.transfer_player(player_in=transfer_in_player, player_out=transfer_out_player)
+                new_team.transfer_player(
+                    player_in=transfer_in_player, player_out=transfer_out_player
+                )
 
                 if new_team.check_team_legality():
                     player_pool.append(transfer_out_player)
-                    player_pool.remove(transfer_in_player)                    
+                    player_pool.remove(transfer_in_player)
                     current_team = new_team
-                
+
                 else:
                     continue
 
-
-                if (total_points := calculate_total_team_points(current_team)) > best_team_points:
+                if (
+                    total_points := calculate_total_team_points(current_team)
+                ) > best_team_points:
                     best_team_points = total_points
                     best_team = current_team
-
 
         self.team = best_team
 
@@ -232,9 +249,11 @@ class HillClimbingAgent(BaseAgent):
             done: boolean indicating if the season is over
         """
 
-        def calculate_total_team_points(team: UserTeam, n_free_transfers, n_transfers) -> float:
+        def calculate_total_team_points(
+            team: UserTeam, n_free_transfers, n_transfers
+        ) -> float:
             player_points = [p.points for p in team.players]
-            
+
             # Calculate number of penalty transfers
             n_penalty_transfers = max(n_transfers - n_free_transfers, 0)
 
@@ -244,10 +263,15 @@ class HillClimbingAgent(BaseAgent):
             return np.sum(player_points) - points_penalty
 
         def count_number_of_transfers(team_a, team_b):
-            return len([p for p in team_a.players if not any(p == item for item in team_b.players)])
+            return len(
+                [
+                    p
+                    for p in team_a.players
+                    if not any(p == item for item in team_b.players)
+                ]
+            )
 
         def update_player_points(players: list[Player], player_pool: list[Player]):
-
             # Update the player gw points to those of the player pool
             for player in players:
                 if player not in player_pool:
@@ -258,7 +282,6 @@ class HillClimbingAgent(BaseAgent):
 
                     player.points = matching_pool_player.points
 
-
         for _ in range(self.n_restarts):
             # Create player pool
             player_pool = make_player_pool(gw_df, points_column=self.points_column)
@@ -267,24 +290,32 @@ class HillClimbingAgent(BaseAgent):
             update_player_points(self.team.players, player_pool)
 
             # Remove any starting team players from the pool
-            player_pool = [p for p in player_pool if not any(p == item for item in self.team.players)]
+            player_pool = [
+                p
+                for p in player_pool
+                if not any(p == item for item in self.team.players)
+            ]
 
-            best_team_points = calculate_total_team_points(self.team, n_free_transfers=1, n_transfers=0)
+            best_team_points = calculate_total_team_points(
+                self.team, n_free_transfers=1, n_transfers=0
+            )
             best_team = self.team
-            
 
             current_team = self.team.clone()
 
             for x in range(self.n_iterations):
-
                 # Randomly select player from current team
                 transfer_out_player = np.random.choice(current_team.players)
 
                 # Get players in removed player's position
-                sub_player_pool = [p for p in player_pool if p.position == transfer_out_player.position]
+                sub_player_pool = [
+                    p for p in player_pool if p.position == transfer_out_player.position
+                ]
 
                 # Substet for players with a higher points
-                sub_player_pool = [p for p in sub_player_pool if p.points > transfer_out_player.points]
+                sub_player_pool = [
+                    p for p in sub_player_pool if p.points > transfer_out_player.points
+                ]
 
                 if len(sub_player_pool) == 0:
                     continue
@@ -293,8 +324,10 @@ class HillClimbingAgent(BaseAgent):
                 transfer_in_player = np.random.choice(sub_player_pool)
 
                 new_team = current_team.clone()
-                new_team.transfer_player(player_in=transfer_in_player, player_out=transfer_out_player)
-                
+                new_team.transfer_player(
+                    player_in=transfer_in_player, player_out=transfer_out_player
+                )
+
                 if new_team.check_team_legality():
                     player_pool.append(transfer_out_player)
                     player_pool.remove(transfer_in_player)
@@ -302,15 +335,18 @@ class HillClimbingAgent(BaseAgent):
 
                     if not current_team.check_team_legality():
                         raise ValueError("Current team is not legal")
-            
+
                 else:
                     continue
 
                 n_transfers = count_number_of_transfers(current_team, self.team)
-                
-                if (total_points := calculate_total_team_points(current_team, n_free_transfers, n_transfers)) > best_team_points:
+
+                if (
+                    total_points := calculate_total_team_points(
+                        current_team, n_free_transfers, n_transfers
+                    )
+                ) > best_team_points:
                     best_team_points = total_points
                     best_team = current_team
-        
-        self.team = best_team
 
+        self.team = best_team

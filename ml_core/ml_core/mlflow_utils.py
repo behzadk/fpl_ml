@@ -1,12 +1,10 @@
-import time
-from typing import Optional, cast, Union
+from typing import Union
 
 import pandas as pd
-from lightning.pytorch import seed_everything
 import mlflow
-import shutil
 from sklearn.base import ClassifierMixin, RegressorMixin
 import torch
+
 
 def get_experiment_runs(
     experiment_name: str,
@@ -27,6 +25,7 @@ def get_experiment_runs(
     runs_df = mlflow.search_runs([current_experiment.experiment_id])
 
     return runs_df
+
 
 def _load_sklearn_model(run_id: str) -> Union[ClassifierMixin, RegressorMixin]:
     """Loads a scikit-learn model from the specified MLflow run.
@@ -52,7 +51,9 @@ def _load_torch_model(run_id: str) -> torch.nn.Module:
     return mlflow.pytorch.load_model(f"runs:/{run_id}/model")
 
 
-def load_model(run_id: str, tracking_uri: str) -> Union[torch.nn.Module, ClassifierMixin, RegressorMixin]:
+def load_model(
+    run_id: str, tracking_uri: str
+) -> Union[torch.nn.Module, ClassifierMixin, RegressorMixin]:
     """Loads a model from the specified MLflow run based on available flavors.
 
     Args:
@@ -91,5 +92,7 @@ def load_preprocessing_pipeline(run_id, tracking_uri):
         _description_
     """
     mlflow.set_tracking_uri(tracking_uri)
-    model = mlflow.pyfunc.load_model(f"runs:/{run_id}/preprocessing_pipeline/").unwrap_python_model()
+    model = mlflow.pyfunc.load_model(
+        f"runs:/{run_id}/preprocessing_pipeline/"
+    ).unwrap_python_model()
     return model

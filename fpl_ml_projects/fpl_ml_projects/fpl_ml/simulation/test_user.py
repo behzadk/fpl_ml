@@ -96,7 +96,6 @@ class TestUserTeam(unittest.TestCase):
         team_clone.transfer_player(player_in, player_out=self.forwards[0])
         self.assertNotEqual(team_clone.players, self.team.players)
 
-
     def test_team_copy(self):
         team_copy = self.team.copy()
 

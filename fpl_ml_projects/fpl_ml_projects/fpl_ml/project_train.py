@@ -17,11 +17,8 @@ import numpy as np
 os.environ["HYDRA_FULL_ERROR"] = "1"
 
 
-
 def _build_random_forest_overrides():
-    overrides = {
-        StoreGroups.MODEL.value: "RandomForestRegressor"
-    }
+    overrides = {StoreGroups.MODEL.value: "RandomForestRegressor"}
     # Override hyperparameters
     overrides.update(
         {
@@ -37,7 +34,9 @@ def _build_random_forest_overrides():
             f"{StoreGroups.MODEL.value}.max_samples": hz.multirun(
                 np.arange(0.1, 1.1, step=0.1)
             ),
-            f"{StoreGroups.MODEL.value}.criterion": hz.multirun(["absolute_error", "friedman_mse"])
+            f"{StoreGroups.MODEL.value}.criterion": hz.multirun(
+                ["absolute_error", "friedman_mse"]
+            ),
         }
     )
 
@@ -45,20 +44,20 @@ def _build_random_forest_overrides():
 
 
 def _build_svm_overrides():
-    overrides = {
-        StoreGroups.MODEL.value: "LinearSVR"
-    }
+    overrides = {StoreGroups.MODEL.value: "LinearSVR"}
 
     # Override hyperparameters
     overrides.update(
         {
-            f"{StoreGroups.MODEL.value}.epsilon": hz.multirun([0.0, 0.05, 0.1, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0]),
+            f"{StoreGroups.MODEL.value}.epsilon": hz.multirun(
+                [0.0, 0.05, 0.1, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
+            ),
             f"{StoreGroups.MODEL.value}.tol": hz.multirun(
                 [1e-2, 1e-1, 1e-4, 1e-3, 1e-5]
             ),
             f"{StoreGroups.MODEL.value}.C": hz.multirun(
                 [0.01, 0.25, 1.0, 0.5, 0.1, 1.5]
-            )
+            ),
         }
     )
 
@@ -85,11 +84,11 @@ def train_svm(user_mlruns_dir, train_val_data_path, test_data_path):
 
     # Use the project default preprocessing pipeline
     overrides.update(
-        {   "experiment_name": "random_forest_regressor_svm",
-            StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default
+        {
+            "experiment_name": "random_forest_regressor_svm",
+            StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default,
         }
     )
-
 
     # Set hydra overrides for tpe sampler
     overrides.update(
@@ -100,10 +99,8 @@ def train_svm(user_mlruns_dir, train_val_data_path, test_data_path):
         }
     )
 
-
     # Run tpe sampler optimization
     launch(config["node"], task_function, overrides=overrides, multirun=True)
-
 
 
 def train_gradient_boosting_regressor_tpe(
@@ -176,11 +173,11 @@ def train_random_forest_regressor(user_mlruns_dir, train_val_data_path, test_dat
 
     # Use the project default preprocessing pipeline
     overrides.update(
-        {   "experiment_name": "random_forest_regressor_2",
-            StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default
+        {
+            "experiment_name": "random_forest_regressor_2",
+            StoreGroups.PREPROCESSING.value: fpl_ml.preprocessing.PreprocessingStores.default,
         }
     )
-
 
     # Set hydra overrides for tpe sampler
     overrides.update(
@@ -190,10 +187,8 @@ def train_random_forest_regressor(user_mlruns_dir, train_val_data_path, test_dat
         }
     )
 
-
     # Run tpe sampler optimization
     launch(config["node"], task_function, overrides=overrides, multirun=True)
-
 
 
 def train_torch_tpe(user_mlruns_dir, train_val_data_path, test_data_path):

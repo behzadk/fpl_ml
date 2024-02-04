@@ -3,10 +3,8 @@ from fpl_ml_projects.fpl_ml.constants import NumericalFeatures, Labels
 from fpl_ml_projects.fpl_ml.simulation.environment import FPLEnv
 from fpl_ml_projects.fpl_ml.constants import RewardType
 import pandas as pd
-import plotly.express as px
 
 from ml_core.mlflow_utils import get_experiment_runs, load_model
-from ml_core.data_module import DataModuleLoadedFromCSV
 import mlflow
 
 data_dir = "/mnt/c/Users/behza/Documents/code/data/fpl_ml/processed/"
