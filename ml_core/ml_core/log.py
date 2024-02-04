@@ -34,7 +34,7 @@ def log_metrics_and_visualisations(
             met = metrics[m].update(y_pred, y_true)
             mlflow.log_metric(f"{stage}_{m}", metrics[m].compute())
 
-            eval_metrics[f"{stage}_{m}"] = met
+            eval_metrics[f"{stage}_{m}"] = metrics[m].compute()
 
             logger.info(f"{stage}_{m}")
 

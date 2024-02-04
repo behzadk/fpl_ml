@@ -4,7 +4,9 @@ from typing import Optional
 import hydra_zen as hz
 
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from torchmetrics import MeanSquaredError
+
+from torchmetrics import MeanSquaredError, SpearmanCorrCoef, R2Score
+from sklearn.svm import LinearSVR
 
 from ml_core.data_module import DataModuleLoadedFromCSV
 from ml_core.dataset import Dataset
@@ -94,7 +96,7 @@ def _initialize_datamodules(
 def _initialize_models():
     model_store = hz.store(group=StoreGroups.MODEL.value)
 
-    sklearn_regressors = [RandomForestRegressor, GradientBoostingRegressor]
+    sklearn_regressors = [RandomForestRegressor, GradientBoostingRegressor, LinearSVR]
 
     # Sklearn regressors
     for regressor in sklearn_regressors:
@@ -121,7 +123,15 @@ def _initialize_metrics():
     metrics_store = hz.store(group=StoreGroups.METRICS.value)
 
     mse = hz.builds(MeanSquaredError, squared=True, num_outputs=1, hydra_convert="all")
-    regression_metrics = {"MSE": mse}
+    mae = hz.builds(MeanSquaredError, squared=False, num_outputs=1, hydra_convert="all")
+    spearman_rank = hz.builds(SpearmanCorrCoef, num_outputs=1, hydra_convert="all")
+    r2_score = hz.builds(R2Score, num_outputs=1, hydra_convert="all")
+
+    regression_metrics = {"MSE": mse, 
+                          "MAE": mae,
+                          "SpearmanCorrCoef": spearman_rank,
+                          "R2Score": r2_score}
+
     metrics_store(regression_metrics, name="regression_default", hydra_convert="all")
 
 
@@ -196,6 +206,7 @@ def _initialize_callbacks():
 def _initialize_loss():
     loss_store = hz.store(group=StoreGroups.LOSS.value)
     loss_store(nn.MSELoss, reduction="mean", name="MSE")
+    loss_store(nn.L1Loss, reduction="mean", name="MAE")
 
 
 def initialize_stores(
