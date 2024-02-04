@@ -1,4 +1,4 @@
-_target_: fpl_ml_projects.fpl_ml.project_train.train_torch_tpe
+_target_: fpl_ml_projects.fpl_ml.project_train.train_svm
 user_mlruns_dir: ${mlruns_dir}
 train_val_data_path: ${processed_data_dir}train_val_data.csv
 test_data_path: ${processed_data_dir}test_data.csv
