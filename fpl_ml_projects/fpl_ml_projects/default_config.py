@@ -50,11 +50,12 @@ def make_default_sklearn_config_store():
 
     config = hz.make_config(
         *zen_config,
+        experiment_name="Test",
         hydra_defaults=[
             "_self_",
             {StoreGroups.USER.value: "default-cpu"},
-            {StoreGroups.DATASET.value: "default-sklearn"},
-            {StoreGroups.DATAMODULE.value: "default"},
+            {StoreGroups.DATASET.value: "default"},
+            {StoreGroups.DATAMODULE.value: "default-sklearn"},
             {StoreGroups.MODEL.value: "default_sklearn"},
             {StoreGroups.PREPROCESSING.value: "default"},
             {StoreGroups.DATA_SPLITTER.value: "default"},
@@ -80,6 +81,7 @@ def make_default_torch_config_store():
 
     config = hz.make_config(
         *zen_config,
+        experiment_name="Test",
         hydra_defaults=[
             "_self_",
             {StoreGroups.USER.value: "default-cpu"},
