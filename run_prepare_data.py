@@ -7,7 +7,7 @@ from loguru import logger
 
 from ml_core.utils import add_prefix_to_columns, get_columns_with_prefix
 from user_config import PROCESSED_DATA_DIR, VAASTAV_FPL_DIR
-
+pd.options.mode.copy_on_write = True
 
 def _get_gw_paths(season_dir: os.PathLike) -> pd.DataFrame:
     """Gets paths to each game week csv from the season directory. Generates a
@@ -66,13 +66,20 @@ def _merge_additional_raw_data(
 
     season_team_df = master_team_df.loc[master_team_df["season"] == season]
 
-    if "player_id" not in player_raw_df.columns:
-        player_raw_df = player_raw_df.rename_axis("player_id").reset_index()
-        player_raw_df["player_id"] = player_raw_df["player_id"].astype(str)
+    player_id_df['player_name'] = player_id_df['first_name'] + '_' + player_id_df['second_name']
+    player_id_df.rename(columns={"id": "player_id"}, inplace=True)
+    player_id_df['player_id'] = player_id_df['player_id'].astype(str)
+
+
+    player_raw_df['player_name'] = player_raw_df['first_name'] + '_' + player_raw_df['second_name']
+    
+    player_raw_df = player_raw_df.merge(player_id_df, on="player_name")
+
 
     player_raw_df = player_raw_df[["player_id", "element_type", "team"]]
 
     raw_data_df = pd.merge(player_raw_df, season_team_df, on="team")
+
     gw_df = pd.merge(gw_df, raw_data_df, on="player_id")
 
     return gw_df
@@ -94,6 +101,16 @@ def _generate_gw_paths_df(data_dir):
 
     return game_week_paths_df
 
+def _generate_avg_stat_column(year_player_df, stat, game_week_column):
+    year_player_df = year_player_df.sort_values(by=[game_week_column], ascending=True)
+    cumulative_stat_value = year_player_df[stat].cumsum()
+
+    year_player_df[f'gw_avg_{stat}'] = cumulative_stat_value / year_player_df[game_week_column].values
+    year_player_df[f'gw_avg_{stat}'] = year_player_df[f'gw_avg_{stat}'].shift(1, fill_value=0.0)
+
+    return year_player_df
+
+
 
 def _generate_player_summary_statistics(master_df: pd.DataFrame):
     """Each row of the dataframe contains stats for how the player performed on
@@ -106,19 +123,52 @@ def _generate_player_summary_statistics(master_df: pd.DataFrame):
     """
 
     player_dfs = []
+    
+
     for player_name in master_df.player_name.unique():
         logger.info(f"Preparing summary statistics for {player_name}")
         player_df = master_df.loc[master_df.player_name == player_name]
 
-        player_df = player_df.sort_values(by=["starting_year", "game_week"])
+        player_df = player_df.sort_values(by=["starting_year", "game_week"], ascending=True)
+        
+        year_player_dfs = []
 
-        window_sizes = [2, 4, 6, 8]
-        stat_columns = ["minutes", "assists", "goals_conceded", "goals_scored", "bonus"]
-        for w in window_sizes:
+        starting_years = player_df.starting_year.unique()
+        
+        for y in player_df.starting_year.unique():
+            year_player_df = player_df[player_df.starting_year == y]
+
+            window_sizes = [2, 4, 6]
+            stat_columns = ["minutes", "assists", "goals_conceded", "goals_scored", "bonus"]
+            for w in window_sizes:
+                for s in stat_columns:
+                    year_player_df = generate_moving_average(
+                        year_player_df, column=s, window_size=w, fill_value=0.0
+                    )
+
+            # Make gw average columns
             for s in stat_columns:
-                player_df = generate_moving_average(
-                    player_df, column=s, window_size=w, fill_value=-1
-                )
+                year_player_df = _generate_avg_stat_column(year_player_df=year_player_df, stat=s, game_week_column="game_week")
+            
+            year_player_dfs.append(year_player_df)
+
+        player_df = pd.concat(year_player_dfs)
+
+        for s in starting_years:
+            if s not in player_df["starting_year"].unique():
+                raise ValueError(f"Starting year {s} not found for player {player_name}")
+
+        # Get yearly totals
+
+        print(player_df['starting_year'].unique())
+        print("")
+
+        yearly_totals = player_df.groupby("starting_year").sum().reset_index()
+        
+        # Make previous year total column
+        yearly_totals["previous_year_total_points"] = yearly_totals["total_points"].shift(1)
+        player_df = pd.merge(player_df, yearly_totals[["starting_year", "previous_year_total_points"]], on="starting_year")
+        player_df["previous_year_total_points"] = player_df["previous_year_total_points"].fillna(0)
 
         player_dfs.append(player_df)
 
@@ -185,17 +235,30 @@ def _clean_game_weeks(df, game_week_column, season_column):
     return pd.concat(clean_dfs)
 
 
-def generate_moving_average(player_season_df, column, window_size, fill_value=None):
-    player_season_df[f"rolling_mean_{window_size}_{column}"] = (
-        player_season_df[column]
-        .rolling(window=window_size)
-        .mean()
-        .shift(fill_value=fill_value)
-    )
-    player_season_df[f"rolling_mean_{window_size}_{column}"] = player_season_df[
-        f"rolling_mean_{window_size}_{column}"
-    ].fillna(fill_value)
+def _clean_redundant_players(df):
 
+    drop_players = []
+    for player in df['player_name'].unique():
+        sub_df = df.loc[df['player_name'] == player]
+
+        
+        if sub_df['gw_avg_minutes'].sum() == 0:
+            drop_players.append(player)
+
+    df = df.loc[~df['player_name'].isin(drop_players)]
+
+    return df
+        
+
+def generate_moving_average(player_season_df, column, window_size, fill_value=None):
+    rolling_mean_values = player_season_df[column].rolling(window=window_size, min_periods=1).mean().shift(periods=1, fill_value=fill_value).values
+    player_season_df[f"rolling_mean_{window_size}_{column}"] = rolling_mean_values
+
+    # raise ValueError("This function is broken")
+
+    player_season_df.loc[:, f"rolling_mean_{window_size}_{column}"] = player_season_df.loc[
+        :, f"rolling_mean_{window_size}_{column}"
+    ].fillna(fill_value)
     return player_season_df
 
 
@@ -257,7 +320,14 @@ def main():
     master_df["starting_year"] = master_df.apply(
         lambda row: get_season_start_year(row["season"]), axis=1
     )
+
+    master_df = master_df.loc[master_df["starting_year"] >= 2018]
+
     master_df = _generate_player_summary_statistics(master_df)
+
+    master_df = master_df.loc[master_df["starting_year"] >= 2019]
+
+    master_df = _clean_redundant_players(master_df)
 
     X = [
         "value",
@@ -266,19 +336,25 @@ def main():
         "game_week",
         "team_name",
         "was_home",
+        "previous_year_total_points",
     ]
     y = ["total_points"]
 
     rolling_mean_columns = get_columns_with_prefix(
         master_df, prefix_list=["rolling_mean_"]
     )
+    gw_avg_columns = get_columns_with_prefix(master_df, prefix_list=["gw_avg_"])
+    X.extend(gw_avg_columns)
     X.extend(rolling_mean_columns)
+
 
     # Holdout year for test set
     test_year = 2022
-    test_df = master_df.loc[master_df["starting_year"] == test_year][[*X, *y]]
+    test_df = master_df.loc[master_df["starting_year"] == test_year][["player_name", *X, *y]]
 
-    train_df = master_df.loc[master_df["starting_year"] != test_year][[*X, *y]]
+    train_years = [2020, 2021]
+    train_df = master_df.loc[master_df["starting_year"].isin(train_years)][["player_name", *X, *y]]
+
 
     test_df = add_prefix_to_columns(test_df, columns=X, prefix="X_")
     train_df = add_prefix_to_columns(train_df, columns=X, prefix="X_")
