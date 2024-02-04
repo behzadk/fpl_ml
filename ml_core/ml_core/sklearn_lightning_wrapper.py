@@ -51,16 +51,21 @@ class SklearnModel:
         )
 
         # Log metrics and figures for train data
-        output_metrics = self._log(batch=train_batch, stage="train")
+        train_output_metrics = self._log(batch=train_batch, stage="train")
 
         # Log metrics and figures for validation data
         val_batch = data_module.val_dataloader().dataset[:]
-        output_metrics = self._log(batch=val_batch, stage="val")
+        val_output_metrics = self._log(batch=val_batch, stage="val")
 
         # Log metrics and figures for test data
         data_module.setup("test")
         test_batch = data_module.test_dataloader().dataset[:]
-        output_metrics = self._log(batch=test_batch, stage="test")
+        test_output_metrics = self._log(batch=test_batch, stage="test")
+
+        output_metrics = {}
+        output_metrics.update(train_output_metrics)
+        output_metrics.update(val_output_metrics)
+        output_metrics.update(test_output_metrics)
 
         return output_metrics
 
@@ -81,9 +86,10 @@ class SklearnModel:
             )
 
         # Move to pytorch tensor for torchmetrics compatibility
-        y_true = torch.from_numpy(y_true)
-        y_pred = torch.from_numpy(y_pred)
+        y_true =  torch.from_numpy(y_true).float().to("cpu", dtype=torch.float32)
+        y_pred = torch.from_numpy(y_pred).float().to("cpu", dtype=torch.float32)
 
+                
         output_metrics = log_metrics_and_visualisations(
             y_true,
             y_pred,

@@ -16,13 +16,14 @@ from ml_core.preprocessing import DataframePipeline
 
 def run_train(
     user: User,
+    experiment_name: str,
     dataset: partial[torch.utils.data.Dataset],
     datamodule: partial[pl.LightningDataModule],
     model: Union[RegressorMixin, torch.nn.Module],
     preprocessing: DataframePipeline,
     metrics: dict,
     visualisations: dict,
-    optimizer: Optional[partial[torch.optim.Optimizer]],
+    optimizer: Optional[partial[torch.optim.Optimizer]] = None,
     loss: Optional[Union[torch.nn.Module, torchmetrics.Metric]] = None,
     trainer: Optional[pl.Trainer] = None,
 ):
@@ -45,12 +46,10 @@ def run_train(
     tracking_uri = f"file://{user.mlruns_dir}"
     mlflow.end_run()
     mlflow.set_tracking_uri(tracking_uri)
-    mlflow.set_experiment(experiment_name="Test")
+    mlflow.set_experiment(experiment_name=experiment_name)
 
     model_base_class = get_base_class(model)
     datamodule = datamodule()
-    # datamodule.setup("fit")
-
     # # Get data dimensions
     # data_input_dim = datamodule.train_dataloader().dataset.get_input_dim()
     # data_output_dim = datamodule.train_dataloader().dataset.get_output_dim()
@@ -58,13 +57,15 @@ def run_train(
     # logger.info(f"Data input dim: {data_input_dim}, data output dim: {data_output_dim}")
 
     if model_base_class == "sklearn":
+        datamodule.setup("fit")
+
         output_metrics = train_sklearn(
             datamodule,
             model,
             metrics=metrics,
-            experiment_name="Test",
+            experiment_name=experiment_name,
             visualisations=visualisations,
-            return_validation_metrics=None,
+            return_validation_metrics=["val_MSE"],
             random_seed=user.random_seed,
         )
 
@@ -80,9 +81,9 @@ def run_train(
             partial_optimizer=optimizer,
             loss=loss,
             trainer=trainer,
-            experiment_name="Test",
+            experiment_name=experiment_name,
             visualisations=visualisations,
-            return_validation_metrics=["val_MSE"],
+            return_validation_metrics=["val_SpearmanCorrCoef"],
             random_seed=user.random_seed,
         )
 
@@ -93,7 +94,7 @@ def run_train(
 
 
 def train_sklearn(
-    data_module: pl.LightningDataModule,
+    datamodule: pl.LightningDataModule,
     model: Union[ClassifierMixin, RegressorMixin],
     metrics: dict[str, Metric],
     experiment_name: str,
@@ -110,12 +111,19 @@ def train_sklearn(
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         mlflow.sklearn.autolog(log_datasets=False)
 
+        mlflow.pyfunc.log_model(
+            "preprocessing_pipeline",
+            python_model=datamodule.preprocessing_pipeline,
+        )
+
+
         # Seed everything and log the seed
         random_seed = set_random_seeds(random_seed)
         mlflow.log_param("seed", random_seed)
 
         # Fit model
-        output_metrics = model.fit(data_module)
+        output_metrics = model.fit(datamodule)
+    
 
     # Optionally return metrics for hyperparameter optimization
     if return_validation_metrics:
